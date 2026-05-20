@@ -2,26 +2,30 @@ import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase-server'
 import { requireAdmin } from '@/lib/auth-guard'
 
-type RouteParams = {
-  params: { id: string }
-}
-
-export async function GET(_request: Request, { params }: RouteParams) {
+export async function GET(
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params
   const supabase = createAdminClient()
 
   const { data } = await supabase
     .from('business_pages')
     .select('*')
-    .eq('customer_id', params.id)
+    .eq('customer_id', id)
     .single()
 
   return NextResponse.json(data)
 }
 
-export async function PATCH(request: Request, { params }: RouteParams) {
+export async function PATCH(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
   const { error: authError } = await requireAdmin()
   if (authError) return authError
 
+  const { id } = await params
   const supabase = createAdminClient()
   const body = await request.json()
 
@@ -35,7 +39,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
         brand_color: body.brand_color,
         is_active: body.is_active === 'true' || body.is_active === true,
       })
-      .eq('customer_id', params.id)
+      .eq('customer_id', id)
 
     if (error) throw error
 

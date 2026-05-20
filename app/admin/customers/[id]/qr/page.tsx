@@ -1,22 +1,27 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, use } from 'react'
 import { generateQRCode } from '@/lib/qr'
 import { QRDisplay } from '@/components/QRDisplay'
 
-export default function QRPage({ params }: { params: { id: string } }) {
+export default function QRPage({
+  params,
+}: {
+  params: Promise<{ id: string }>
+}) {
+  const { id } = use(params)
   const [qrData, setQrData] = useState('')
   const [business, setBusiness] = useState<any>(null)
 
   useEffect(() => {
-    fetch(`/api/customers/${params.id}`)
+    fetch(`/api/customers/${id}`)
       .then((r) => r.json())
       .then(async (b) => {
         setBusiness(b)
         const qr = await generateQRCode(b.slug)
         setQrData(qr)
       })
-  }, [params.id])
+  }, [id])
 
   function downloadPNG() {
     if (!qrData) return
@@ -34,9 +39,7 @@ export default function QRPage({ params }: { params: { id: string } }) {
       <h2>${business?.business_name}</h2>
       <p>${business?.location}</p>
       <img src='${qrData}' width='300' />
-      <p style='font-size:14px;color:#666'>
-        Scan to leave a Google Review
-      </p>
+      <p style='font-size:14px;color:#666'>Scan to leave a Google Review</p>
       <p style='font-size:11px;color:#999'>reviewboost.in/${business?.slug}</p>
       </body></html>
     `)

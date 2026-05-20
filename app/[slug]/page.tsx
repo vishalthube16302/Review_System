@@ -2,18 +2,21 @@ import { createAdminClient } from '@/lib/supabase-server'
 import { notFound, redirect } from 'next/navigation'
 import ReviewPageClient from './ReviewPageClient'
 
-export default async function ReviewPage({ params }: { params: { slug: string } }) {
+export default async function ReviewPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>
+}) {
+  const { slug } = await params
   const supabase = createAdminClient()
 
   const { data: business } = await supabase
     .from('business_pages')
     .select('*')
-    .eq('slug', params.slug)
+    .eq('slug', slug)
     .maybeSingle()
 
-  if (!business) {
-    notFound()
-  }
+  if (!business) notFound()
 
   if (!business.is_active || new Date(business.expires_at) < new Date()) {
     redirect('/expired')
