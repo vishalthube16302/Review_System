@@ -20,16 +20,37 @@ export default function ReviewPageClient({
   const [feedbackText, setFeedbackText] = useState('')
   const [copied, setCopied] = useState(false)
   const [showFeedback, setShowFeedback] = useState(false)
+  const [loadingReviews, setLoadingReviews] = useState(false)
 
-  function handleStarClick(n: number) {
+  async function handleStarClick(n: number) {
     setStars(n)
     setSelected(-1)
     setShowFeedback(false)
     setCopied(false)
 
     if (n >= 4) {
-      const revs = getRandomTemplates(templates, n, business)
-      setReviews(revs)
+      setReviews([])
+      setLoadingReviews(true)
+
+      // Show instant static suggestions immediately so the customer isn't staring
+      // at a blank screen, then replace with AI drafts as soon as they're ready.
+      setReviews(getRandomTemplates(templates, n, business))
+
+      try {
+        const res = await fetch('/api/generate-review', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ business_id: business.id, stars: n }),
+        })
+        const data = await res.json()
+        if (Array.isArray(data.reviews) && data.reviews.length > 0) {
+          setReviews(data.reviews)
+        }
+      } catch {
+        // Network error - the static suggestions set above stay on screen.
+      } finally {
+        setLoadingReviews(false)
+      }
     } else {
       setReviews([])
       setShowFeedback(true)
@@ -125,7 +146,9 @@ export default function ReviewPageClient({
       {/* Review Cards or Feedback Form */}
       {reviews.length > 0 && (
         <div className="w-full max-w-md space-y-3 mb-6">
-          <p className="text-sm text-slate-500 font-medium">Select your review:</p>
+          <p className="text-sm text-slate-500 font-medium">
+            {loadingReviews ? 'Personalizing your review...' : 'Select your review:'}
+          </p>
           {reviews.map((review, i) => (
             <button
               key={i}
