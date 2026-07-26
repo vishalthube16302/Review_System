@@ -4,19 +4,19 @@ import { requireAdmin } from '@/lib/auth-guard'
 
 export async function GET(
   _request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ branchId: string }> }
 ) {
-  const { id } = await params
+  const { branchId } = await params
   const supabase = createAdminClient()
 
   const { data, error } = await supabase
-    .from('customers')
-    .select('*, business_pages(*)')
-    .eq('id', id)
+    .from('business_pages')
+    .select('*')
+    .eq('id', branchId)
     .maybeSingle()
 
   if (error || !data) {
-    return NextResponse.json({ error: 'Customer not found' }, { status: 404 })
+    return NextResponse.json({ error: 'Branch not found' }, { status: 404 })
   }
 
   return NextResponse.json(data)
@@ -24,34 +24,35 @@ export async function GET(
 
 export async function PATCH(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ branchId: string }> }
 ) {
   const { error: authError } = await requireAdmin()
   if (authError) return authError
 
-  const { id } = await params
+  const { branchId } = await params
   const supabase = createAdminClient()
   const body = await request.json()
 
   try {
     const { error } = await supabase
-      .from('customers')
+      .from('business_pages')
       .update({
         business_name: body.business_name,
-        owner_name: body.owner_name,
-        phone: body.phone,
-        email: body.email,
-        plan: body.plan,
-        paid_until: body.paid_until,
+        location: body.location,
+        city: body.city,
+        area: body.area,
+        cuisine_type: body.cuisine_type,
+        google_place_id: body.google_place_id,
+        brand_color: body.brand_color,
         is_active: body.is_active === 'true' || body.is_active === true,
       })
-      .eq('id', id)
+      .eq('id', branchId)
 
     if (error) throw error
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('Error updating customer:', error)
-    return NextResponse.json({ error: 'Failed to update customer' }, { status: 500 })
+    console.error('Error updating branch:', error)
+    return NextResponse.json({ error: 'Failed to update branch' }, { status: 500 })
   }
 }

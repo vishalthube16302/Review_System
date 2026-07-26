@@ -1,27 +1,29 @@
 'use client'
 
 import { useEffect, useState, use } from 'react'
+import Link from 'next/link'
 import { generateQRCode } from '@/lib/qr'
 import { QRDisplay } from '@/components/QRDisplay'
+import type { BusinessPage } from '@/types'
 
 export default function QRPage({
   params,
 }: {
-  params: Promise<{ id: string }>
+  params: Promise<{ id: string; branchId: string }>
 }) {
-  const { id } = use(params)
+  const { id, branchId } = use(params)
   const [qrData, setQrData] = useState('')
-  const [business, setBusiness] = useState<any>(null)
+  const [business, setBusiness] = useState<BusinessPage | null>(null)
 
   useEffect(() => {
-    fetch(`/api/customers/${id}`)
+    fetch(`/api/branches/${branchId}`)
       .then((r) => r.json())
-      .then(async (b) => {
+      .then(async (b: BusinessPage) => {
         setBusiness(b)
         const qr = await generateQRCode(b.slug)
         setQrData(qr)
       })
-  }, [id])
+  }, [branchId])
 
   function downloadPNG() {
     if (!qrData) return
@@ -51,7 +53,7 @@ export default function QRPage({
       <h1 className="text-xl font-bold mb-2">{business?.business_name}</h1>
       <p className="text-slate-500 text-sm mb-6">{business?.location}</p>
 
-      {qrData && <QRDisplay dataUrl={qrData} slug={business?.slug} />}
+      {qrData && <QRDisplay dataUrl={qrData} slug={business?.slug ?? ''} />}
 
       <div className="flex gap-3 mt-6">
         <button
@@ -67,6 +69,13 @@ export default function QRPage({
           Print QR
         </button>
       </div>
+
+      <Link
+        href={`/admin/customers/${id}`}
+        className="block mt-6 text-sm text-indigo-600 hover:text-indigo-700"
+      >
+        ← Back to {business?.business_name ?? 'customer'}
+      </Link>
     </div>
   )
 }
