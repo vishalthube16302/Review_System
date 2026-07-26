@@ -8,6 +8,9 @@ export interface Customer {
   is_active: boolean
   paid_until: string
   created_at: string
+  // Populated when fetched via the nested `customers.select('*, business_pages(*)')` query.
+  // A customer can have multiple branches, each with its own slug/QR/location.
+  business_pages?: BusinessPage[]
 }
 
 export interface BusinessPage {

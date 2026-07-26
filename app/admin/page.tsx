@@ -50,7 +50,7 @@ export default async function AdminDashboard() {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-4 gap-4 mb-8">
-        <StatCard label="Total Businesses" value={totalCount} color="indigo" />
+        <StatCard label="Total Branches" value={totalCount} color="indigo" />
         <StatCard label="Active Links" value={activeCount} color="green" />
         <StatCard label="Expiring (30d)" value={expiringCount} color="yellow" />
         <StatCard label="Scans Today" value={scansCount} color="sky" />
@@ -75,7 +75,7 @@ export default async function AdminDashboard() {
 
       {/* Recent Customers */}
       <div>
-        <h2 className="text-lg font-semibold text-slate-900 mb-3">Recent Customers</h2>
+        <h2 className="text-lg font-semibold text-slate-900 mb-3">Recently Added Branches</h2>
         <div className="bg-white rounded-xl shadow-sm">
           {recent?.map((b) => (
             <div key={b.id} className="flex items-center justify-between p-4 border-b border-slate-200 last:border-b-0">
@@ -87,7 +87,7 @@ export default async function AdminDashboard() {
                 href={`/admin/customers/${b.customer_id}`}
                 className="text-indigo-600 hover:text-indigo-700 text-sm font-medium"
               >
-                Edit
+                View Customer
               </Link>
             </div>
           ))}

@@ -68,10 +68,15 @@ export async function POST(request: Request) {
 export async function GET() {
   const supabase = createAdminClient()
 
-  const { data } = await supabase
-    .from('business_pages')
-    .select('*')
+  const { data, error } = await supabase
+    .from('customers')
+    .select('*, business_pages(*)')
     .order('created_at', { ascending: false })
+
+  if (error) {
+    console.error('Error listing customers:', error)
+    return NextResponse.json({ error: 'Failed to load customers' }, { status: 500 })
+  }
 
   return NextResponse.json(data ?? [])
 }
