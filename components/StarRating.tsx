@@ -14,7 +14,7 @@ export function StarRating({ value, onSelect, disabled }: StarRatingProps) {
           key={star}
           onClick={() => onSelect(star)}
           disabled={disabled}
-          className="text-5xl transition-transform hover:scale-125 active:scale-95 disabled:opacity-50"
+          className="text-5xl transition-transform hover:scale-125 active:scale-95 disabled:opacity-50 text-amber-400"
         >
           {star <= value ? '⭐' : '☆'}
         </button>
