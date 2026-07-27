@@ -2,10 +2,10 @@ import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase-server'
 import { uniqueSlug, PLAN_DAYS } from '@/lib/slug'
 import { addDays } from 'date-fns'
-import { requireAdmin } from '@/lib/auth-guard'
+import { requireSuperAdmin } from '@/lib/auth-guard'
 
 export async function POST(request: Request) {
-  const { error: authError } = await requireAdmin()
+  const { error: authError } = await requireSuperAdmin()
   if (authError) return authError
 
   const supabase = createAdminClient()
@@ -66,6 +66,9 @@ export async function POST(request: Request) {
 }
 
 export async function GET() {
+  const { error: authError } = await requireSuperAdmin()
+  if (authError) return authError
+
   const supabase = createAdminClient()
 
   const { data, error } = await supabase

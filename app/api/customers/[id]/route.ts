@@ -1,12 +1,16 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase-server'
-import { requireAdmin } from '@/lib/auth-guard'
+import { requireSuperAdmin, requireRestaurantAccess } from '@/lib/auth-guard'
 
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
+
+  const { error: authError } = await requireRestaurantAccess(id)
+  if (authError) return authError
+
   const supabase = createAdminClient()
 
   const { data, error } = await supabase
@@ -26,7 +30,7 @@ export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { error: authError } = await requireAdmin()
+  const { error: authError } = await requireSuperAdmin()
   if (authError) return authError
 
   const { id } = await params
