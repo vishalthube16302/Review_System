@@ -10,7 +10,7 @@ export default async function DashboardLayout({
   const profile = await getCurrentProfile()
 
   if (!profile) {
-    redirect('/login')
+    redirect('/customer/login')
   }
 
   if (profile.role !== 'restaurant_owner') {

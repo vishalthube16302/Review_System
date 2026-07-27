@@ -6,7 +6,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const profile = await getCurrentProfile()
 
   if (!profile) {
-    redirect('/login')
+    redirect('/admin/login')
   }
 
   if (profile.role !== 'super_admin') {
