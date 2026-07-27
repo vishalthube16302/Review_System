@@ -1,36 +1,18 @@
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import { getCurrentProfile } from '@/lib/auth-guard'
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const cookieStore = await cookies()
+  const profile = await getCurrentProfile()
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll()
-        },
-        setAll(cookiesToSet) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
-            )
-          } catch {}
-        },
-      },
-    }
-  )
-
-  const {
-    data: { session },
-  } = await supabase.auth.getSession()
-
-  if (!session) {
+  if (!profile) {
     redirect('/login')
+  }
+
+  if (profile.role !== 'super_admin') {
+    // A restaurant_owner (or any non-super_admin) has no business in /admin -
+    // send them to their own dashboard instead of just blocking them.
+    redirect('/dashboard')
   }
 
   return (
@@ -53,6 +35,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <Link href="/admin/feedback" className="hover:text-indigo-400">
             Feedback
           </Link>
+          <form action="/api/auth/signout" method="post">
+            <button className="text-slate-300 hover:text-white ml-2">Sign Out</button>
+          </form>
         </div>
       </nav>
       <main className="p-6">{children}</main>
