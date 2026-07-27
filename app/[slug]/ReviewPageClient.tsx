@@ -156,7 +156,7 @@ export default function ReviewPageClient({
               className={`w-full text-left p-4 rounded-xl border-2 text-sm leading-relaxed transition-all ${
                 selected === i
                   ? 'border-indigo-500 bg-indigo-50 text-indigo-900'
-                  : 'border-slate-200 bg-white hover:border-indigo-200'
+                  : 'border-slate-200 bg-white text-slate-800 hover:border-indigo-200'
               }`}
               disabled={submitting}
             >

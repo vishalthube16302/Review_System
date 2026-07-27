@@ -12,12 +12,10 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+/* This app is a fixed light theme throughout (bg-white, bg-slate-50, etc. are
+   hardcoded everywhere) - intentionally NOT following prefers-color-scheme,
+   since a dark-mode override here previously made body text/stars turn
+   near-white and become invisible against the light card backgrounds. */
 
 body {
   background: var(--background);
