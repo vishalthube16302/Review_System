@@ -65,6 +65,12 @@ export default function CustomerLoginPage() {
             </div>
             <h1 className="text-xl font-bold text-slate-900">Restaurant Owner Login</h1>
             <p className="text-slate-500 text-sm mt-1">Sign in to manage your reviews & feedback</p>
+            <p className="text-xs text-slate-400 mt-3">
+              Platform admin?{' '}
+              <a href="/admin/login" className="text-indigo-600 hover:underline">
+                Sign in here
+              </a>
+            </p>
           </div>
         ) : (
           <div className="text-center mb-6">
