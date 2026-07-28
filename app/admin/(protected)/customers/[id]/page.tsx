@@ -4,6 +4,7 @@ import { useState, useEffect, use } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { StatusBadge } from '@/components/StatusBadge'
+import { DurationPicker } from '@/components/DurationPicker'
 import type { Customer, BusinessPage } from '@/types'
 
 const PLANS = [
@@ -23,6 +24,9 @@ export default function CustomerDetailPage({
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [form, setForm] = useState<Partial<Customer>>({})
+  const [renewDays, setRenewDays] = useState(180)
+  const [renewing, setRenewing] = useState(false)
+  const [renewMessage, setRenewMessage] = useState('')
 
   useEffect(() => {
     fetch(`/api/customers/${id}`)
@@ -50,6 +54,32 @@ export default function CustomerDetailPage({
 
     setSaving(false)
     router.refresh()
+  }
+
+  async function handleRenew() {
+    setRenewing(true)
+    setRenewMessage('')
+
+    const res = await fetch(`/api/customers/${id}/renew`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ subscription_days: renewDays }),
+    })
+
+    const data = await res.json()
+
+    if (res.ok) {
+      setRenewMessage(
+        `Renewed - now valid until ${new Date(data.paid_until).toLocaleDateString()}. QR codes unchanged.`
+      )
+      const refreshed = await fetch(`/api/customers/${id}`).then((r) => r.json())
+      setCustomer(refreshed)
+      setForm(refreshed)
+    } else {
+      setRenewMessage(data.error || 'Renewal failed.')
+    }
+
+    setRenewing(false)
   }
 
   if (loading || !customer) {
@@ -136,6 +166,25 @@ export default function CustomerDetailPage({
             {saving ? 'Saving...' : 'Save Account Changes'}
           </button>
         </form>
+      </div>
+
+      <div className="bg-white rounded-2xl p-6 shadow-sm">
+        <h2 className="text-lg font-semibold text-slate-900 mb-1">Renew Subscription</h2>
+        <p className="text-sm text-slate-500 mb-4">
+          Extends this account and all its branches. Existing QR codes and review links are
+          never changed by a renewal.
+        </p>
+        <DurationPicker value={renewDays} onChange={setRenewDays} />
+        <button
+          onClick={handleRenew}
+          disabled={renewing}
+          className="w-full mt-4 bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 disabled:opacity-50"
+        >
+          {renewing ? 'Renewing...' : `Renew for ${renewDays} days`}
+        </button>
+        {renewMessage && (
+          <p className="text-sm text-slate-600 mt-3 bg-slate-50 rounded-lg p-3">{renewMessage}</p>
+        )}
       </div>
 
       <div>
