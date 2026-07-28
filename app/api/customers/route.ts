@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase-server'
-import { uniqueSlug, PLAN_DAYS } from '@/lib/slug'
+import { uniqueSlug } from '@/lib/slug'
 import { addDays } from 'date-fns'
 import { requireSuperAdmin } from '@/lib/auth-guard'
 
@@ -15,8 +15,9 @@ export async function POST(request: Request) {
     // 1. Generate unique slug
     const slug = await uniqueSlug(body.business_name)
 
-    // 2. Calculate expiry date
-    const days = PLAN_DAYS[body.plan] ?? 180
+    // 2. Calculate expiry date - subscription_days is set explicitly by the
+    // admin (quick-pick or custom number), not derived from the plan name.
+    const days = Number(body.subscription_days) > 0 ? Number(body.subscription_days) : 180
     const expires_at = addDays(new Date(), days).toISOString()
 
     // 3. Insert customer

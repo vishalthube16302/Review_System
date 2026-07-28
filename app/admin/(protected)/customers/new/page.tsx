@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { generateSlug } from '@/lib/slug'
+import { DurationPicker } from '@/components/DurationPicker'
 
 const PLANS = [
   { id: 'basic', label: 'Basic', days: 90, price: '₹999' },
@@ -13,6 +14,7 @@ const PLANS = [
 export default function AddCustomerPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
+  const [subscriptionDays, setSubscriptionDays] = useState(180)
   const [form, setForm] = useState({
     business_name: '',
     owner_name: '',
@@ -31,6 +33,15 @@ export default function AddCustomerPage() {
     setForm((prev) => ({ ...prev, [k]: v }))
   }
 
+  function selectPlan(planId: string) {
+    set('plan', planId)
+    // Pre-fill a sensible default duration for the tier, but the admin can
+    // still override it with the picker below - plan tier and subscription
+    // length are independent, this is just a helpful starting point.
+    const tier = PLANS.find((p) => p.id === planId)
+    if (tier) setSubscriptionDays(tier.days)
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
@@ -38,7 +49,7 @@ export default function AddCustomerPage() {
     const res = await fetch('/api/customers', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form),
+      body: JSON.stringify({ ...form, subscription_days: subscriptionDays }),
     })
 
     const data = await res.json()
@@ -190,7 +201,7 @@ export default function AddCustomerPage() {
               <button
                 key={p.id}
                 type="button"
-                onClick={() => set('plan', p.id)}
+                onClick={() => selectPlan(p.id)}
                 className={`p-3 rounded-lg border-2 text-center transition ${
                   form.plan === p.id
                     ? 'border-indigo-600 bg-indigo-50'
@@ -203,6 +214,13 @@ export default function AddCustomerPage() {
               </button>
             ))}
           </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1">
+            Subscription Duration *
+          </label>
+          <DurationPicker value={subscriptionDays} onChange={setSubscriptionDays} />
         </div>
 
         <button
