@@ -42,6 +42,13 @@ export default function AddCustomerPage() {
     if (tier) setSubscriptionDays(tier.days)
   }
 
+  const today = new Date()
+  const expiryDate = new Date(today)
+  expiryDate.setDate(expiryDate.getDate() + subscriptionDays)
+  const dateFormat: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short', year: 'numeric' }
+  const todayLabel = today.toLocaleDateString('en-US', dateFormat)
+  const expiryLabel = expiryDate.toLocaleDateString('en-US', dateFormat)
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
@@ -221,6 +228,17 @@ export default function AddCustomerPage() {
             Subscription Duration *
           </label>
           <DurationPicker value={subscriptionDays} onChange={setSubscriptionDays} />
+          <div className="mt-3 bg-slate-50 rounded-lg p-3 text-sm flex items-center justify-between">
+            <div>
+              <span className="text-slate-500">Starts:</span>{' '}
+              <span className="font-medium text-slate-800">{todayLabel}</span>
+            </div>
+            <div className="text-slate-300">→</div>
+            <div>
+              <span className="text-slate-500">Expires:</span>{' '}
+              <span className="font-semibold text-indigo-700">{expiryLabel}</span>
+            </div>
+          </div>
         </div>
 
         <button

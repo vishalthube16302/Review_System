@@ -88,10 +88,41 @@ export default function CustomerDetailPage({
 
   const branches: BusinessPage[] = customer.business_pages ?? []
 
+  const currentExpiry = new Date(customer.paid_until)
+  const now = new Date()
+  const isCurrentlyActive = currentExpiry > now
+  const daysRemaining = Math.ceil((currentExpiry.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+
+  // Mirrors the backend's rule exactly: if still active, the renewal adds
+  // days on top of the current expiry (no days lost); if already lapsed,
+  // the new period starts counting from today.
+  const renewalBaseDate = isCurrentlyActive ? currentExpiry : now
+  const newExpiryPreview = new Date(renewalBaseDate)
+  newExpiryPreview.setDate(newExpiryPreview.getDate() + renewDays)
+  const dateFormat: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short', year: 'numeric' }
+
   return (
     <div className="max-w-3xl mx-auto space-y-8">
       <div>
-        <h1 className="text-2xl font-bold mb-6">{customer.business_name}</h1>
+        <h1 className="text-2xl font-bold mb-1">{customer.business_name}</h1>
+        <p className="text-sm text-slate-500 mb-6">
+          Customer since {new Date(customer.created_at).toLocaleDateString('en-US', dateFormat)}
+        </p>
+
+        <div className="bg-white rounded-2xl p-5 shadow-sm mb-6 flex items-center justify-between">
+          <div>
+            <p className="text-xs text-slate-400 uppercase tracking-wide mb-1">Subscription Status</p>
+            <p className="text-lg font-semibold text-slate-900">
+              {isCurrentlyActive
+                ? `Active - valid until ${currentExpiry.toLocaleDateString('en-US', dateFormat)}`
+                : `Expired ${Math.abs(daysRemaining)} day${Math.abs(daysRemaining) === 1 ? '' : 's'} ago`}
+            </p>
+            {isCurrentlyActive && (
+              <p className="text-sm text-slate-500 mt-0.5">{daysRemaining} days remaining</p>
+            )}
+          </div>
+          <StatusBadge isActive={customer.is_active} expiresAt={customer.paid_until} />
+        </div>
 
         <form onSubmit={handleUpdate} className="bg-white rounded-2xl p-6 shadow-sm space-y-4">
           <div className="grid grid-cols-2 gap-4">
@@ -175,12 +206,40 @@ export default function CustomerDetailPage({
           never changed by a renewal.
         </p>
         <DurationPicker value={renewDays} onChange={setRenewDays} />
+
+        <div className="mt-3 bg-slate-50 rounded-lg p-3 text-sm space-y-1">
+          <p className="text-slate-500">
+            {isCurrentlyActive
+              ? `Still active, so renewal adds on top of the current expiry (no days lost):`
+              : `Already expired, so the new period starts counting from today:`}
+          </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-slate-500">
+                {isCurrentlyActive ? 'Current expiry:' : 'Today:'}
+              </span>{' '}
+              <span className="font-medium text-slate-800">
+                {renewalBaseDate.toLocaleDateString('en-US', dateFormat)}
+              </span>
+            </div>
+            <div className="text-slate-300">+ {renewDays}d →</div>
+            <div>
+              <span className="text-slate-500">New expiry:</span>{' '}
+              <span className="font-semibold text-green-700">
+                {newExpiryPreview.toLocaleDateString('en-US', dateFormat)}
+              </span>
+            </div>
+          </div>
+        </div>
+
         <button
           onClick={handleRenew}
           disabled={renewing}
           className="w-full mt-4 bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 disabled:opacity-50"
         >
-          {renewing ? 'Renewing...' : `Renew for ${renewDays} days`}
+          {renewing
+            ? 'Renewing...'
+            : `Renew for ${renewDays} days (until ${newExpiryPreview.toLocaleDateString('en-US', dateFormat)})`}
         </button>
         {renewMessage && (
           <p className="text-sm text-slate-600 mt-3 bg-slate-50 rounded-lg p-3">{renewMessage}</p>
