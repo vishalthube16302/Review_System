@@ -38,6 +38,8 @@ export async function PATCH(
   const body = await request.json()
 
   try {
+    const isActive = body.is_active === 'true' || body.is_active === true
+
     const { error } = await supabase
       .from('customers')
       .update({
@@ -47,11 +49,21 @@ export async function PATCH(
         email: body.email,
         plan: body.plan,
         paid_until: body.paid_until,
-        is_active: body.is_active === 'true' || body.is_active === true,
+        is_active: isActive,
       })
       .eq('id', id)
 
     if (error) throw error
+
+    // Keep every branch's expiry in sync with the account-level date,
+    // exactly like the Renew action does - a manual date edit here
+    // shouldn't leave branches on a stale expiry. Never touches slug.
+    const { error: branchError } = await supabase
+      .from('business_pages')
+      .update({ expires_at: body.paid_until, is_active: isActive })
+      .eq('customer_id', id)
+
+    if (branchError) throw branchError
 
     return NextResponse.json({ success: true })
   } catch (error) {
