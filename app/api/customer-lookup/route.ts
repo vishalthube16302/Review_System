@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase-server'
+import { rateLimit } from '@/lib/rate-limit'
 
 /**
  * Given an email, returns the branding (business name, logo, color) for the
@@ -9,6 +10,9 @@ import { createAdminClient } from '@/lib/supabase-server'
  * this endpoint can't be used to enumerate which emails have accounts.
  */
 export async function GET(request: Request) {
+  const limited = await rateLimit(request, 'customer-lookup', 15, 300) // 15 per 5 min per IP
+  if (limited) return limited
+
   const { searchParams } = new URL(request.url)
   const email = searchParams.get('email')?.trim()
 

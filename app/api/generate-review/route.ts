@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase-server'
 import { getRandomTemplates } from '@/lib/templates'
+import { rateLimit } from '@/lib/rate-limit'
 import type { BusinessPage } from '@/types'
 
 // Free-tier AI provider. Swap provider by changing only this constant + callGroq().
@@ -68,6 +69,9 @@ Respond with ONLY a JSON array of ${count} strings, nothing else. Example format
 }
 
 export async function POST(req: NextRequest) {
+  const limited = await rateLimit(req, 'generate-review', 10, 300) // 10 per 5 min per IP
+  if (limited) return limited
+
   let body: GenerateBody
   try {
     body = await req.json()
