@@ -176,6 +176,22 @@ export default function CustomerDetailPage({
             </div>
           </div>
 
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">
+              Subscription Valid Until
+            </label>
+            <input
+              type="date"
+              value={form.paid_until ? form.paid_until.slice(0, 10) : ''}
+              onChange={(e) => set('paid_until', new Date(e.target.value).toISOString())}
+              className="w-full border border-slate-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+            <p className="text-xs text-slate-400 mt-1">
+              Directly set an exact date - useful for manual/offline payments. Also updates this
+              customer's branches. For adding a fixed number of days instead, use Renew below.
+            </p>
+          </div>
+
           <div className="flex items-center justify-between">
             <label className="flex items-center gap-2 cursor-pointer">
               <input

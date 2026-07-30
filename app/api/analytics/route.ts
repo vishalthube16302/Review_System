@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase-server'
+import { rateLimit } from '@/lib/rate-limit'
 
 export async function POST(request: Request) {
+  const limited = await rateLimit(request, 'analytics', 20, 300) // 20 per 5 min per IP
+  if (limited) return limited
+
   const supabase = createAdminClient()
   const body = await request.json()
 
