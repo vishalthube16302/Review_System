@@ -14,14 +14,27 @@ export default function QRPage({
   const { id, branchId } = use(params)
   const [qrData, setQrData] = useState('')
   const [business, setBusiness] = useState<BusinessPage | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
 
   useEffect(() => {
     fetch(`/api/branches/${branchId}`)
-      .then((r) => r.json())
+      .then(async (r) => {
+        if (!r.ok) {
+          const body = await r.json().catch(() => ({}))
+          throw new Error(body.error || 'Failed to load branch.')
+        }
+        return r.json()
+      })
       .then(async (b: BusinessPage) => {
         setBusiness(b)
         const qr = await generateQRCode(b.slug)
         setQrData(qr)
+        setLoading(false)
+      })
+      .catch((err) => {
+        setError(err.message || 'Network error - please refresh and try again.')
+        setLoading(false)
       })
   }, [branchId])
 
@@ -35,6 +48,7 @@ export default function QRPage({
 
   function printQR() {
     if (!qrData) return
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || window.location.origin
     const win = window.open('', '_blank')
     win?.document.write(`
       <html><body style='text-align:center;font-family:sans-serif;padding:40px'>
@@ -42,10 +56,22 @@ export default function QRPage({
       <p>${business?.location}</p>
       <img src='${qrData}' width='300' />
       <p style='font-size:14px;color:#666'>Scan to leave a Google Review</p>
-      <p style='font-size:11px;color:#999'>reviewboost.in/${business?.slug}</p>
+      <p style='font-size:11px;color:#999'>${baseUrl}/${business?.slug}</p>
       </body></html>
     `)
     win?.print()
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-md mx-auto mt-10 bg-red-50 border border-red-100 text-red-600 text-sm p-4 rounded-lg text-center">
+        {error}
+      </div>
+    )
+  }
+
+  if (loading) {
+    return <div className="max-w-sm mx-auto text-center py-10 text-slate-500">Loading QR code...</div>
   }
 
   return (

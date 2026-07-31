@@ -12,6 +12,7 @@ export default function AddBranchPage({
   const { id } = use(params)
   const router = useRouter()
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
   const [form, setForm] = useState({
     business_name: '',
     google_place_id: '',
@@ -29,20 +30,28 @@ export default function AddBranchPage({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
+    setError('')
 
-    const res = await fetch(`/api/customers/${id}/branches`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form),
-    })
+    try {
+      const res = await fetch(`/api/customers/${id}/branches`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      })
 
-    const data = await res.json()
+      const data = await res.json()
 
-    if (data.id) {
-      router.push(`/admin/customers/${id}/branches/${data.id}/qr`)
+      if (res.ok && data.id) {
+        router.push(`/admin/customers/${id}/branches/${data.id}/qr`)
+        return
+      }
+
+      setError(data.error || 'Failed to add branch. Please check the details and try again.')
+    } catch {
+      setError('Network error - please check your connection and try again.')
+    } finally {
+      setLoading(false)
     }
-
-    setLoading(false)
   }
 
   return (
@@ -59,6 +68,11 @@ export default function AddBranchPage({
       )}
 
       <form onSubmit={handleSubmit} className="bg-white rounded-2xl p-6 shadow-sm space-y-4">
+        {error && (
+          <div className="bg-red-50 text-red-600 text-sm p-3 rounded-lg border border-red-100">
+            {error}
+          </div>
+        )}
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1">Branch / Outlet Name *</label>
           <input
