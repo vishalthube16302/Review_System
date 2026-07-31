@@ -30,13 +30,25 @@ export default function CustomerDetailPage({
   const [receiptUrl, setReceiptUrl] = useState('')
   const [paymentMethod, setPaymentMethod] = useState('cash')
   const [amountPaid, setAmountPaid] = useState('')
+  const [loadError, setLoadError] = useState('')
+  const [saveError, setSaveError] = useState('')
 
   useEffect(() => {
     fetch(`/api/customers/${id}`)
-      .then((r) => r.json())
+      .then(async (r) => {
+        if (!r.ok) {
+          const body = await r.json().catch(() => ({}))
+          throw new Error(body.error || 'Failed to load customer.')
+        }
+        return r.json()
+      })
       .then((c) => {
         setCustomer(c)
         setForm(c)
+        setLoading(false)
+      })
+      .catch((err) => {
+        setLoadError(err.message || 'Network error - please refresh and try again.')
         setLoading(false)
       })
   }, [id])
@@ -48,15 +60,26 @@ export default function CustomerDetailPage({
   async function handleUpdate(e: React.FormEvent) {
     e.preventDefault()
     setSaving(true)
+    setSaveError('')
 
-    await fetch(`/api/customers/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form),
-    })
+    try {
+      const res = await fetch(`/api/customers/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      })
 
-    setSaving(false)
-    router.refresh()
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
+        throw new Error(body.error || 'Failed to save changes.')
+      }
+
+      router.refresh()
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Failed to save changes.')
+    } finally {
+      setSaving(false)
+    }
   }
 
   async function handleRenew() {
@@ -64,31 +87,43 @@ export default function CustomerDetailPage({
     setRenewMessage('')
     setReceiptUrl('')
 
-    const res = await fetch(`/api/customers/${id}/renew`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        subscription_days: renewDays,
-        payment_method: paymentMethod,
-        amount_paid: amountPaid ? Number(amountPaid) : null,
-      }),
-    })
+    try {
+      const res = await fetch(`/api/customers/${id}/renew`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          subscription_days: renewDays,
+          payment_method: paymentMethod,
+          amount_paid: amountPaid ? Number(amountPaid) : null,
+        }),
+      })
 
-    const data = await res.json()
+      const data = await res.json()
 
-    if (res.ok) {
-      setRenewMessage(
-        `Renewed - now valid until ${new Date(data.paid_until).toLocaleDateString()}. QR codes unchanged.`
-      )
-      if (data.receipt_url) setReceiptUrl(data.receipt_url)
-      const refreshed = await fetch(`/api/customers/${id}`).then((r) => r.json())
-      setCustomer(refreshed)
-      setForm(refreshed)
-    } else {
-      setRenewMessage(data.error || 'Renewal failed.')
+      if (res.ok) {
+        setRenewMessage(
+          `Renewed - now valid until ${new Date(data.paid_until).toLocaleDateString()}. QR codes unchanged.`
+        )
+        if (data.receipt_url) setReceiptUrl(data.receipt_url)
+        const refreshed = await fetch(`/api/customers/${id}`).then((r) => r.json())
+        setCustomer(refreshed)
+        setForm(refreshed)
+      } else {
+        setRenewMessage(data.error || 'Renewal failed.')
+      }
+    } catch {
+      setRenewMessage('Network error - please check your connection and try again.')
+    } finally {
+      setRenewing(false)
     }
+  }
 
-    setRenewing(false)
+  if (loadError) {
+    return (
+      <div className="max-w-md mx-auto mt-10 bg-red-50 border border-red-100 text-red-600 text-sm p-4 rounded-lg text-center">
+        {loadError}
+      </div>
+    )
   }
 
   if (loading || !customer) {
@@ -213,6 +248,12 @@ export default function CustomerDetailPage({
             </label>
             <StatusBadge isActive={!!form.is_active} expiresAt={form.paid_until || customer.paid_until} />
           </div>
+
+          {saveError && (
+            <div className="bg-red-50 text-red-600 text-sm p-3 rounded-lg border border-red-100">
+              {saveError}
+            </div>
+          )}
 
           <button
             type="submit"
