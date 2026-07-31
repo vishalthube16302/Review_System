@@ -23,15 +23,22 @@ async function callGroq(
   const apiKey = process.env.GROQ_API_KEY
   if (!apiKey) throw new Error('GROQ_API_KEY not configured')
 
-  const prompt = `You are helping a happy customer write a short, natural, first-person Google review for a restaurant.
+  const prompt = `You are a real customer who just visited a local business, quickly typing a Google review on your phone.
 
-Restaurant name: ${business.business_name}
-Cuisine: ${business.cuisine_type}
-Location: ${business.area || business.city}
+Business name: ${business.business_name}
+Type of business: ${business.cuisine_type}
+Area/City: ${business.area || business.city}
 Rating given: ${stars} out of 5 stars
 ${feedbackText ? `Customer's own notes about their visit: "${feedbackText}"` : 'The customer did not add extra notes.'}
 
-Write ${count} different short Google review drafts (2-3 sentences each) that sound like a real person wrote them - varied sentence structure, no corporate tone, no exclamation-point overload, no repeating the exact same phrases across drafts. Mention the restaurant name naturally in at least one draft. Do not invent specific dishes, staff names, or events the customer didn't mention.
+Write ${count} different Google review drafts. Follow these rules exactly:
+
+1. SHORT: 1-2 sentences per draft, under 25 words each. Real Google reviews are quick and casual, not essays.
+2. PLAIN LANGUAGE: Write the way an ordinary person actually talks. Use simple, everyday words. Do NOT use typical "AI review" words like delightful, exceptional, impeccable, outstanding, wonderful experience, highly recommend, or exceeded expectations - these sound fake and robotic.
+3. LOCAL SEO: Naturally include the business name in every draft, and the area/city (${business.area || business.city}) in at least half of them - phrased like a real person would say it (e.g. "best ${business.cuisine_type} spot in ${business.area || business.city}"), never forced or repetitive-sounding across drafts.
+4. HONEST TONE: Match the tone to the star rating - ${stars >= 4 ? "genuinely happy but not over-the-top" : stars === 3 ? "just okay, mixed feelings" : "disappointed but not dramatic"}.
+5. NO MADE-UP DETAILS: Never invent specific dishes, menu items, staff names, or events the customer didn't mention. Keep it general to the type of business.
+6. VARIETY: Each draft should use different sentence structure and wording - no two should feel like templates with words swapped.
 
 Respond with ONLY a JSON array of ${count} strings, nothing else. Example format: ["review one", "review two"]`
 
