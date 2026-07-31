@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase-server'
 import { getRandomTemplates } from '@/lib/templates'
 import { rateLimit } from '@/lib/rate-limit'
+import { getCategoryLabel, CATEGORY_REVIEW_FOCUS } from '@/lib/business-categories'
 import type { BusinessPage } from '@/types'
 
 // Free-tier AI provider. Swap provider by changing only this constant + callGroq().
@@ -23,10 +24,23 @@ async function callGroq(
   const apiKey = process.env.GROQ_API_KEY
   if (!apiKey) throw new Error('GROQ_API_KEY not configured')
 
+  // Prefer the proper business_category/business_description fields; fall
+  // back to the older cuisine_type field for branches created before those
+  // existed, so nothing breaks for existing customers.
+  const categoryLabel = business.business_category
+    ? getCategoryLabel(business.business_category)
+    : business.cuisine_type || 'business'
+  const focusAreas = business.business_category
+    ? CATEGORY_REVIEW_FOCUS[business.business_category] || CATEGORY_REVIEW_FOCUS.other
+    : 'overall quality and service'
+  const whatTheyDo = business.business_description
+    ? ` They ${business.business_description.replace(/\.$/, '')}.`
+    : ''
+
   const prompt = `You are a real customer who just visited a local business, quickly typing a Google review on your phone.
 
 Business name: ${business.business_name}
-Type of business: ${business.cuisine_type}
+Business type: ${categoryLabel}.${whatTheyDo}
 Area/City: ${business.area || business.city}
 Rating given: ${stars} out of 5 stars
 ${feedbackText ? `Customer's own notes about their visit: "${feedbackText}"` : 'The customer did not add extra notes.'}
@@ -35,10 +49,11 @@ Write ${count} different Google review drafts. Follow these rules exactly:
 
 1. SHORT: 1-2 sentences per draft, under 25 words each. Real Google reviews are quick and casual, not essays.
 2. PLAIN LANGUAGE: Write the way an ordinary person actually talks. Use simple, everyday words. Do NOT use typical "AI review" words like delightful, exceptional, impeccable, outstanding, wonderful experience, highly recommend, or exceeded expectations - these sound fake and robotic.
-3. LOCAL SEO: Naturally include the business name in every draft, and the area/city (${business.area || business.city}) in at least half of them - phrased like a real person would say it (e.g. "best ${business.cuisine_type} spot in ${business.area || business.city}"), never forced or repetitive-sounding across drafts.
-4. HONEST TONE: Match the tone to the star rating - ${stars >= 4 ? "genuinely happy but not over-the-top" : stars === 3 ? "just okay, mixed feelings" : "disappointed but not dramatic"}.
-5. NO MADE-UP DETAILS: Never invent specific dishes, menu items, staff names, or events the customer didn't mention. Keep it general to the type of business.
-6. VARIETY: Each draft should use different sentence structure and wording - no two should feel like templates with words swapped.
+3. LOCAL SEO: Naturally include the business name in every draft, and the area/city (${business.area || business.city}) in at least half of them - phrased like a real person would say it, never forced or repetitive-sounding across drafts.
+4. STAY RELEVANT TO THE BUSINESS TYPE: For a ${categoryLabel} business, real customers usually mention things like: ${focusAreas}. Pick from these naturally instead of generic restaurant-style praise - do not talk about food or dining unless the business type is actually food-related.
+5. HONEST TONE: Match the tone to the star rating - ${stars >= 4 ? "genuinely happy but not over-the-top" : stars === 3 ? "just okay, mixed feelings" : "disappointed but not dramatic"}.
+6. NO MADE-UP DETAILS: Never invent specific products, staff names, or events the customer didn't mention. Stay general to what this type of business does.
+7. VARIETY: Each draft should use different sentence structure and wording - no two should feel like templates with words swapped.
 
 Respond with ONLY a JSON array of ${count} strings, nothing else. Example format: ["review one", "review two"]`
 

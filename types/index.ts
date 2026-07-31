@@ -23,6 +23,8 @@ export interface BusinessPage {
   city: string
   area?: string
   cuisine_type: string
+  business_category?: string
+  business_description?: string
   logo_url?: string
   brand_color: string
   plan: string

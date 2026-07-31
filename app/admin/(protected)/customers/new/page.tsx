@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { generateSlug } from '@/lib/slug'
 import { DurationPicker } from '@/components/DurationPicker'
+import { BUSINESS_CATEGORIES } from '@/lib/business-categories'
 
 const PLANS = [
   { id: 'basic', label: 'Basic', days: 90, price: '₹999' },
@@ -25,6 +26,8 @@ export default function AddCustomerPage() {
     location: '',
     area: '',
     cuisine_type: '',
+    business_category: '',
+    business_description: '',
     brand_color: '4F46E5',
     plan: 'standard',
   })
