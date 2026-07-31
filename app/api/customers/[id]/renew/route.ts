@@ -64,19 +64,32 @@ export async function POST(
 
       if (updateBranchesError) throw updateBranchesError
 
+      // Computed once and reused for every row below, not called inside the
+      // map - guarantees every branch's history row from this single renewal
+      // shares the exact same renewed_at, so the receipt page can group them
+      // together reliably by that timestamp.
+      const renewedAt = new Date().toISOString()
+
       // One renewal_history row per branch (the table is keyed by
       // business_id), so each branch's renewal is individually auditable.
       const historyRows = branches.map((b) => ({
         business_id: b.id,
         plan: customer.plan,
         amount_paid: body.amount_paid ?? null,
+        payment_method: body.payment_method ?? null,
         valid_from: base.toISOString(),
         valid_until: newExpiry,
-        renewed_at: new Date().toISOString(),
+        renewed_at: renewedAt,
       }))
 
       const { error: historyError } = await supabase.from('renewal_history').insert(historyRows)
       if (historyError) throw historyError
+
+      return NextResponse.json({
+        success: true,
+        paid_until: newExpiry,
+        receipt_url: `/admin/customers/${customerId}/receipt?renewed_at=${encodeURIComponent(renewedAt)}`,
+      })
     }
 
     return NextResponse.json({ success: true, paid_until: newExpiry })
