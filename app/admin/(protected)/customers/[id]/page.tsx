@@ -27,6 +27,9 @@ export default function CustomerDetailPage({
   const [renewDays, setRenewDays] = useState(180)
   const [renewing, setRenewing] = useState(false)
   const [renewMessage, setRenewMessage] = useState('')
+  const [receiptUrl, setReceiptUrl] = useState('')
+  const [paymentMethod, setPaymentMethod] = useState('cash')
+  const [amountPaid, setAmountPaid] = useState('')
 
   useEffect(() => {
     fetch(`/api/customers/${id}`)
@@ -59,11 +62,16 @@ export default function CustomerDetailPage({
   async function handleRenew() {
     setRenewing(true)
     setRenewMessage('')
+    setReceiptUrl('')
 
     const res = await fetch(`/api/customers/${id}/renew`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ subscription_days: renewDays }),
+      body: JSON.stringify({
+        subscription_days: renewDays,
+        payment_method: paymentMethod,
+        amount_paid: amountPaid ? Number(amountPaid) : null,
+      }),
     })
 
     const data = await res.json()
@@ -72,6 +80,7 @@ export default function CustomerDetailPage({
       setRenewMessage(
         `Renewed - now valid until ${new Date(data.paid_until).toLocaleDateString()}. QR codes unchanged.`
       )
+      if (data.receipt_url) setReceiptUrl(data.receipt_url)
       const refreshed = await fetch(`/api/customers/${id}`).then((r) => r.json())
       setCustomer(refreshed)
       setForm(refreshed)
@@ -248,6 +257,38 @@ export default function CustomerDetailPage({
           </div>
         </div>
 
+        <div className="grid grid-cols-2 gap-3 mt-4">
+          <div>
+            <label className="block text-xs font-medium text-slate-500 mb-1">
+              Payment Method
+            </label>
+            <select
+              value={paymentMethod}
+              onChange={(e) => setPaymentMethod(e.target.value)}
+              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            >
+              <option value="cash">Cash</option>
+              <option value="upi">UPI</option>
+              <option value="bank_transfer">Bank Transfer</option>
+              <option value="cheque">Cheque</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-slate-500 mb-1">
+              Amount Paid (₹, optional)
+            </label>
+            <input
+              type="number"
+              min={0}
+              value={amountPaid}
+              onChange={(e) => setAmountPaid(e.target.value)}
+              placeholder="e.g. 1799"
+              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+          </div>
+        </div>
+
         <button
           onClick={handleRenew}
           disabled={renewing}
@@ -259,6 +300,16 @@ export default function CustomerDetailPage({
         </button>
         {renewMessage && (
           <p className="text-sm text-slate-600 mt-3 bg-slate-50 rounded-lg p-3">{renewMessage}</p>
+        )}
+        {receiptUrl && (
+          <a
+            href={receiptUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block text-center mt-2 text-sm text-indigo-600 hover:text-indigo-700 font-medium"
+          >
+            View / Print Receipt →
+          </a>
         )}
       </div>
 
