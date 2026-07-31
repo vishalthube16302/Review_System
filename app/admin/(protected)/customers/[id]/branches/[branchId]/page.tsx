@@ -15,13 +15,25 @@ export default function EditBranchPage({
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [form, setForm] = useState<Partial<BusinessPage>>({})
+  const [loadError, setLoadError] = useState('')
+  const [saveError, setSaveError] = useState('')
 
   useEffect(() => {
     fetch(`/api/branches/${branchId}`)
-      .then((r) => r.json())
+      .then(async (r) => {
+        if (!r.ok) {
+          const body = await r.json().catch(() => ({}))
+          throw new Error(body.error || 'Failed to load branch.')
+        }
+        return r.json()
+      })
       .then((b) => {
         setBranch(b)
         setForm(b)
+        setLoading(false)
+      })
+      .catch((err) => {
+        setLoadError(err.message || 'Network error - please refresh and try again.')
         setLoading(false)
       })
   }, [branchId])
@@ -33,16 +45,34 @@ export default function EditBranchPage({
   async function handleUpdate(e: React.FormEvent) {
     e.preventDefault()
     setSaving(true)
+    setSaveError('')
 
-    await fetch(`/api/branches/${branchId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form),
-    })
+    try {
+      const res = await fetch(`/api/branches/${branchId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      })
 
-    setSaving(false)
-    router.push(`/admin/customers/${id}`)
-    router.refresh()
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
+        throw new Error(body.error || 'Failed to save changes.')
+      }
+
+      router.push(`/admin/customers/${id}`)
+      router.refresh()
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Failed to save changes.')
+      setSaving(false)
+    }
+  }
+
+  if (loadError) {
+    return (
+      <div className="max-w-md mx-auto mt-10 bg-red-50 border border-red-100 text-red-600 text-sm p-4 rounded-lg text-center">
+        {loadError}
+      </div>
+    )
   }
 
   if (loading || !branch) {
@@ -136,6 +166,12 @@ export default function EditBranchPage({
             <span className="text-sm font-medium text-slate-700">Active (QR code works)</span>
           </label>
         </div>
+
+        {saveError && (
+          <div className="bg-red-50 text-red-600 text-sm p-3 rounded-lg border border-red-100">
+            {saveError}
+          </div>
+        )}
 
         <button
           type="submit"

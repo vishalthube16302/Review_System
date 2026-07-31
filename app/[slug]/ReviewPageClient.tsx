@@ -17,6 +17,7 @@ export default function ReviewPageClient({
   const [selected, setSelected] = useState(-1)
   const [submitted, setSubmitted] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState('')
   const [feedbackText, setFeedbackText] = useState('')
   const [copied, setCopied] = useState(false)
   const [showFeedback, setShowFeedback] = useState(false)
@@ -61,7 +62,8 @@ export default function ReviewPageClient({
     if (selected < 0 || submitting) return
     setSubmitting(true)
 
-    // Save analytics
+    // Fire-and-forget: analytics shouldn't block the customer's review flow
+    // even if this fails.
     fetch('/api/analytics', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -71,7 +73,7 @@ export default function ReviewPageClient({
         template_index: selected,
         was_submitted: true,
       }),
-    })
+    }).catch(() => {})
 
     // Copy to clipboard
     try {
@@ -91,18 +93,31 @@ export default function ReviewPageClient({
   async function handleFeedbackSubmit() {
     if (!feedbackText.trim() || submitting) return
     setSubmitting(true)
+    setSubmitError('')
 
-    await fetch('/api/feedback', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        business_id: business.id,
-        stars_given: stars,
-        feedback_text: feedbackText,
-      }),
-    })
+    try {
+      const res = await fetch('/api/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          business_id: business.id,
+          stars_given: stars,
+          feedback_text: feedbackText,
+        }),
+      })
 
-    setSubmitted(true)
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
+        throw new Error(body.error || 'Something went wrong. Please try again.')
+      }
+
+      setSubmitted(true)
+    } catch (err) {
+      setSubmitError(
+        err instanceof Error ? err.message : 'Something went wrong. Please try again.'
+      )
+      setSubmitting(false)
+    }
   }
 
   if (submitted) {
@@ -210,6 +225,12 @@ export default function ReviewPageClient({
         >
           {submitting ? 'Sending...' : 'Send Feedback'}
         </button>
+      )}
+
+      {submitError && (
+        <p className="w-full max-w-md text-center text-red-600 text-sm mt-3 bg-red-50 rounded-lg p-3">
+          {submitError}
+        </p>
       )}
     </div>
   )

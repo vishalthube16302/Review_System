@@ -24,13 +24,18 @@ export function FeedbackCard({
 
   async function toggleRead() {
     setUpdating(true)
-    const res = await fetch(`/api/feedback/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ is_read: !isRead }),
-    })
-    if (res.ok) setIsRead(!isRead)
-    setUpdating(false)
+    try {
+      const res = await fetch(`/api/feedback/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_read: !isRead }),
+      })
+      if (res.ok) setIsRead(!isRead)
+    } catch {
+      // Network error - button just resets below, admin can retry the click.
+    } finally {
+      setUpdating(false)
+    }
   }
 
   return (

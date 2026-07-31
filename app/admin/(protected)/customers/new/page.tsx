@@ -15,6 +15,7 @@ const PLANS = [
 export default function AddCustomerPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
   const [subscriptionDays, setSubscriptionDays] = useState(180)
   const [form, setForm] = useState({
     business_name: '',
@@ -55,20 +56,28 @@ export default function AddCustomerPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
+    setError('')
 
-    const res = await fetch('/api/customers', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...form, subscription_days: subscriptionDays }),
-    })
+    try {
+      const res = await fetch('/api/customers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...form, subscription_days: subscriptionDays }),
+      })
 
-    const data = await res.json()
+      const data = await res.json()
 
-    if (data.id) {
-      router.push(`/admin/customers/${data.customer_id}/branches/${data.id}/qr`)
+      if (res.ok && data.id) {
+        router.push(`/admin/customers/${data.customer_id}/branches/${data.id}/qr`)
+        return
+      }
+
+      setError(data.error || 'Failed to create customer. Please check the details and try again.')
+    } catch {
+      setError('Network error - please check your connection and try again.')
+    } finally {
+      setLoading(false)
     }
-
-    setLoading(false)
   }
 
   return (
@@ -85,6 +94,11 @@ export default function AddCustomerPage() {
       )}
 
       <form onSubmit={handleSubmit} className="bg-white rounded-2xl p-6 shadow-sm space-y-4">
+        {error && (
+          <div className="bg-red-50 text-red-600 text-sm p-3 rounded-lg border border-red-100">
+            {error}
+          </div>
+        )}
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1">Business Name *</label>
           <input
