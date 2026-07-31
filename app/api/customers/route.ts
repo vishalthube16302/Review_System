@@ -49,6 +49,8 @@ export async function POST(request: Request) {
         city: body.city,
         area: body.area,
         cuisine_type: body.cuisine_type,
+        business_category: body.business_category,
+        business_description: body.business_description,
         brand_color: body.brand_color,
         plan: body.plan,
         expires_at,

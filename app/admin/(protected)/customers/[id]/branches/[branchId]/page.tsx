@@ -3,6 +3,7 @@
 import { useState, useEffect, use } from 'react'
 import { useRouter } from 'next/navigation'
 import type { BusinessPage } from '@/types'
+import { BUSINESS_CATEGORIES } from '@/lib/business-categories'
 
 export default function EditBranchPage({
   params,
@@ -111,6 +112,43 @@ export default function EditBranchPage({
             type="text"
             value={form.google_place_id || ''}
             onChange={(e) => set('google_place_id', e.target.value)}
+            className="w-full border border-slate-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1">Business Category</label>
+          <select
+            value={form.business_category || ''}
+            onChange={(e) => {
+              const category = BUSINESS_CATEGORIES.find((c) => c.value === e.target.value)
+              set('business_category', e.target.value)
+              if (category) set('cuisine_type', category.label.split(' / ')[0].split(' (')[0])
+            }}
+            className="w-full border border-slate-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
+          >
+            <option value="">Not set</option>
+            {BUSINESS_CATEGORIES.map((c) => (
+              <option key={c.value} value={c.value}>
+                {c.label}
+              </option>
+            ))}
+          </select>
+          <p className="text-xs text-slate-400 mt-1">
+            Used to help the AI write reviews that actually fit this business.
+          </p>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1">
+            What do they do? (short description)
+          </label>
+          <input
+            type="text"
+            value={form.business_description || ''}
+            onChange={(e) => set('business_description', e.target.value)}
+            placeholder="e.g. sell and service industrial air compressors (follows the word 'They ...')"
+            maxLength={150}
             className="w-full border border-slate-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
         </div>
