@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { generateSlug } from '@/lib/slug'
 import { DurationPicker } from '@/components/DurationPicker'
+import { BUSINESS_CATEGORIES } from '@/lib/business-categories'
 
 const PLANS = [
   { id: 'basic', label: 'Basic', days: 90, price: '₹999' },
@@ -26,6 +27,8 @@ export default function AddCustomerPage() {
     location: '',
     area: '',
     cuisine_type: '',
+    business_category: '',
+    business_description: '',
     brand_color: '4F46E5',
     plan: 'standard',
   })
@@ -186,14 +189,47 @@ export default function AddCustomerPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">Cuisine Type *</label>
+          <label className="block text-sm font-medium text-slate-700 mb-1">Business Category *</label>
+          <select
+            value={form.business_category}
+            onChange={(e) => {
+              const category = BUSINESS_CATEGORIES.find((c) => c.value === e.target.value)
+              set('business_category', e.target.value)
+              // Keep cuisine_type in sync automatically so older fallback
+              // review templates (which use {cuisine}) still read sensibly -
+              // the admin never has to fill this in twice.
+              if (category) set('cuisine_type', category.label.split(' / ')[0].split(' (')[0])
+            }}
+            className="w-full border border-slate-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
+            required
+          >
+            <option value="" disabled>
+              Select the type of business...
+            </option>
+            {BUSINESS_CATEGORIES.map((c) => (
+              <option key={c.value} value={c.value}>
+                {c.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1">
+            What do they do? (short description, helps AI write better reviews)
+          </label>
           <input
             type="text"
-            value={form.cuisine_type}
-            onChange={(e) => set('cuisine_type', e.target.value)}
+            value={form.business_description}
+            onChange={(e) => set('business_description', e.target.value)}
+            placeholder="e.g. sell and service industrial air compressors (follows the word 'They ...')"
+            maxLength={150}
             className="w-full border border-slate-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            required
           />
+          <p className="text-xs text-slate-400 mt-1">
+            One short line is enough - do not include specific product/staff names, just what
+            kind of work they do.
+          </p>
         </div>
 
         <div>

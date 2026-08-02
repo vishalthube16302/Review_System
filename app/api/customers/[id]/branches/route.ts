@@ -70,6 +70,8 @@ export async function POST(
         city: body.city,
         area: body.area,
         cuisine_type: body.cuisine_type,
+        business_category: body.business_category,
+        business_description: body.business_description,
         brand_color: body.brand_color || '4F46E5',
         plan,
         expires_at,
