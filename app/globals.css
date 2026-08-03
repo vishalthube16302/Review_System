@@ -512,3 +512,250 @@ body {
     transform: rotate(90deg);
   }
 }
+
+/* ---------- Promo strip ---------- */
+.landing .promo-strip {
+  margin-top: 22px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: #fff7ea;
+  border: 1px solid #fbe3b8;
+  color: #92610a;
+  padding: 10px 18px;
+  border-radius: 999px;
+  font-size: 0.88rem;
+  font-weight: 500;
+}
+
+.landing .promo-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex-shrink: 0;
+  animation: pulse-dot 1.8s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(0.8);
+  }
+}
+
+/* ---------- Flow visual: step numbers + animation ---------- */
+.landing .flow-card {
+  position: relative;
+}
+
+.landing .flow-num {
+  position: absolute;
+  top: -10px;
+  left: -10px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--ink);
+  color: white;
+  font-family: var(--font-mono), monospace;
+  font-size: 0.78rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+
+.landing svg.flow-arrow {
+  color: var(--border);
+  flex-shrink: 0;
+}
+
+.landing .qr {
+  position: relative;
+  overflow: hidden;
+}
+
+.landing .scan-line {
+  position: absolute;
+  left: 6px;
+  right: 6px;
+  height: 2px;
+  background: var(--accent);
+  border-radius: 2px;
+  box-shadow: 0 0 8px 1px var(--accent);
+  animation: scan 2.2s ease-in-out infinite;
+}
+
+@keyframes scan {
+  0% {
+    top: 8px;
+  }
+  50% {
+    top: 76px;
+  }
+  100% {
+    top: 8px;
+  }
+}
+
+.landing .stars span {
+  display: inline-block;
+  opacity: 0.2;
+  animation: twinkle-in 2.2s ease-in-out infinite;
+}
+
+@keyframes twinkle-in {
+  0%,
+  100% {
+    opacity: 0.2;
+    transform: scale(0.9);
+  }
+  15%,
+  70% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.landing .posted .check {
+  animation: pop-in 2.2s ease-in-out infinite;
+}
+
+@keyframes pop-in {
+  0%,
+  55% {
+    transform: scale(0);
+  }
+  70% {
+    transform: scale(1.25);
+  }
+  80%,
+  100% {
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing .promo-dot,
+  .landing .scan-line,
+  .landing .stars span,
+  .landing .posted .check {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ---------- Pricing ---------- */
+.landing .pricing-grid {
+  margin-top: 56px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 28px;
+  align-items: stretch;
+}
+
+.landing .price-card {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 32px 26px;
+  display: flex;
+  flex-direction: column;
+}
+
+.landing .price-featured {
+  border-color: var(--primary);
+  box-shadow: 0 12px 32px -12px rgba(79, 70, 229, 0.35);
+  transform: scale(1.03);
+}
+
+.landing .price-badge {
+  position: absolute;
+  top: -13px;
+  left: 26px;
+  background: var(--primary);
+  color: white;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 5px 14px;
+  border-radius: 999px;
+}
+
+.landing .price-badge-alt {
+  background: var(--accent-2);
+}
+
+.landing .price-name {
+  font-family: var(--font-mono), monospace;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+
+.landing .price-amount {
+  margin-top: 10px;
+  font-family: var(--font-display), sans-serif;
+  font-size: 2.1rem;
+  font-weight: 700;
+}
+
+.landing .price-amount span {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--muted);
+  font-family: var(--font-body), sans-serif;
+}
+
+.landing .price-note {
+  margin-top: 4px;
+  font-size: 0.82rem;
+  color: var(--accent-2);
+  font-weight: 500;
+}
+
+.landing .price-card ul {
+  margin-top: 22px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.landing .price-card li {
+  font-size: 0.9rem;
+  color: var(--muted);
+  padding-left: 20px;
+  position: relative;
+}
+
+.landing .price-card li::before {
+  content: '✓';
+  position: absolute;
+  left: 0;
+  color: var(--accent-2);
+  font-weight: 700;
+}
+
+.landing .btn-full {
+  margin-top: 26px;
+  width: 100%;
+}
+
+@media (max-width: 860px) {
+  .landing .pricing-grid {
+    grid-template-columns: 1fr;
+  }
+  .landing .price-featured {
+    transform: none;
+  }
+}

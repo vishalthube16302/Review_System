@@ -13,6 +13,7 @@ export default function LandingPage() {
           </div>
           <div className="nav-links">
             <a href="#how-it-works">How it works</a>
+            <a href="#pricing">Pricing</a>
             <a href="#who-its-for">Who it&apos;s for</a>
             <a href="#features">Features</a>
             <Link href="/customer/login" className="nav-secondary">
@@ -40,6 +41,11 @@ export default function LandingPage() {
               want to post &mdash; and a private channel to catch unhappy ones before they ever
               reach Google.
             </p>
+            <div className="promo-strip">
+              <span className="promo-dot" />
+              AI does the writing for your business &mdash; plans start at just{' '}
+              <strong>₹999/month</strong>
+            </div>
             <div className="hero-ctas">
               <a href="#how-it-works" className="btn btn-primary">
                 See how it works
@@ -50,27 +56,55 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* Signature element: QR scan -> star rating -> posted review flow */}
+          {/* Signature element: QR scan -> star rating -> posted review flow,
+              animated on a loop so it reads at a glance without needing a
+              video/gif asset. */}
           <div className="flow" aria-hidden="true">
             <div className="flow-card">
+              <span className="flow-num">1</span>
               <div className="qr">
                 {Array.from({ length: 49 }).map((_, i) => (
                   <span key={i} className={qrCell(i) ? 'on' : ''} />
                 ))}
+                <span className="scan-line" />
               </div>
-              <p className="flow-label">Scan at checkout</p>
+              <p className="flow-label">Customer scans QR</p>
             </div>
-            <div className="flow-arrow">→</div>
+
+            <svg className="flow-arrow" width="40" height="24" viewBox="0 0 40 24" fill="none">
+              <path
+                d="M2 12h32m0 0-10-9m10 9-10 9"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+
             <div className="flow-card">
+              <span className="flow-num">2</span>
               <div className="stars">
-                {'★★★★★'.split('').map((s, i) => (
-                  <span key={i}>{s}</span>
+                {[0, 1, 2, 3, 4].map((i) => (
+                  <span key={i} style={{ animationDelay: `${i * 0.15}s` }}>
+                    ★
+                  </span>
                 ))}
               </div>
-              <p className="flow-label">Rate the visit</p>
+              <p className="flow-label">Rates the visit</p>
             </div>
-            <div className="flow-arrow">→</div>
+
+            <svg className="flow-arrow" width="40" height="24" viewBox="0 0 40 24" fill="none">
+              <path
+                d="M2 12h32m0 0-10-9m10 9-10 9"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+
             <div className="flow-card">
+              <span className="flow-num">3</span>
               <div className="posted">
                 <span className="g">G</span>
                 <span className="check">✓</span>
@@ -180,6 +214,67 @@ export default function LandingPage() {
                 Renew, upgrade, or extend your plan and the QR codes you already printed keep
                 working &mdash; nothing to reprint.
               </p>
+            </div>
+          </div>
+        </section>
+
+        {/* ---------- Pricing ---------- */}
+        <section id="pricing" className="pricing">
+          <p className="eyebrow center">Simple pricing</p>
+          <h2 className="section-title center">Less than the cost of one lost customer</h2>
+          <p className="section-sub center">
+            No setup fees, no annual lock-in. Pick a plan, pay for the days you need.
+          </p>
+
+          <div className="pricing-grid">
+            <div className="price-card">
+              <p className="price-name">Starter</p>
+              <p className="price-amount">
+                ₹999<span>/month</span>
+              </p>
+              <p className="price-note">Billed monthly</p>
+              <ul>
+                <li>AI-written reviews</li>
+                <li>1 branch</li>
+                <li>Private feedback capture</li>
+              </ul>
+              <a href="mailto:hello@reviewboost.in?subject=ReviewBoost%20-%20Starter%20plan" className="btn btn-ghost btn-full">
+                Get started
+              </a>
+            </div>
+
+            <div className="price-card price-featured">
+              <span className="price-badge">Most popular</span>
+              <p className="price-name">Growth</p>
+              <p className="price-amount">
+                ₹1,799<span>/2 months</span>
+              </p>
+              <p className="price-note">≈ ₹900/month &middot; save 10%</p>
+              <ul>
+                <li>Everything in Starter</li>
+                <li>Up to 3 branches</li>
+                <li>Analytics dashboard</li>
+              </ul>
+              <a href="mailto:hello@reviewboost.in?subject=ReviewBoost%20-%20Growth%20plan" className="btn btn-primary btn-full">
+                Get started
+              </a>
+            </div>
+
+            <div className="price-card">
+              <span className="price-badge price-badge-alt">Best value</span>
+              <p className="price-name">Business</p>
+              <p className="price-amount">
+                ₹4,000<span>/6 months</span>
+              </p>
+              <p className="price-note">≈ ₹667/month &middot; save 33%</p>
+              <ul>
+                <li>Everything in Growth</li>
+                <li>Unlimited branches</li>
+                <li>Priority support</li>
+              </ul>
+              <a href="mailto:hello@reviewboost.in?subject=ReviewBoost%20-%20Business%20plan" className="btn btn-ghost btn-full">
+                Get started
+              </a>
             </div>
           </div>
         </section>
