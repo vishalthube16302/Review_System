@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase-server'
 import { uniqueSlug } from '@/lib/slug'
 import { addDays } from 'date-fns'
 import { requireSuperAdmin } from '@/lib/auth-guard'
+import { generateTempPassword } from '@/lib/generate-password'
 
 export async function POST(request: Request) {
   const { error: authError } = await requireSuperAdmin()
@@ -18,7 +19,10 @@ export async function POST(request: Request) {
     )
   }
 
-  const DEFAULT_PASSWORD = 'Admin@123'
+  // A fresh random password per customer - never a shared static default.
+  // It's shown once on screen to the admin; the owner is forced to change
+  // it on first login via the must_change_password flag on their profile.
+  const tempPassword = generateTempPassword()
 
   try {
     // 1. Generate unique slug
@@ -75,7 +79,7 @@ export async function POST(request: Request) {
     // self-signed-up, so there's no signup email to confirm.
     const { data: authUser, error: authCreateError } = await supabase.auth.admin.createUser({
       email: body.email,
-      password: DEFAULT_PASSWORD,
+      password: tempPassword,
       email_confirm: true,
     })
 
@@ -102,6 +106,7 @@ export async function POST(request: Request) {
       id: authUser.user.id,
       role: 'restaurant_owner',
       customer_id: customer.id,
+      must_change_password: true,
     })
 
     if (profileError) {
@@ -121,7 +126,7 @@ export async function POST(request: Request) {
       ...page,
       credentials: {
         username: body.email,
-        password: DEFAULT_PASSWORD,
+        password: tempPassword,
       },
     })
   } catch (error) {

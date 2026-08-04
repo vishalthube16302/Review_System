@@ -1,8 +1,10 @@
 /**
  * Builds a printable "Scan to Review" poster as a PNG data URL, combining:
- *  - a colourful Google-style wordmark (so it's obviously a Google Review
- *    prompt, not just a random QR code)
- *  - a 5-star row
+ *  - a clear "leave us a review" heading with a 5-star row (deliberately NOT
+ *    a recreation of Google's wordmark/logo - reproducing their brand
+ *    styling on printed material we hand out to hundreds of businesses is a
+ *    real trademark-usage risk, so this uses generic star-rating language
+ *    plus the business's own brand color instead)
  *  - the QR code itself
  *  - the business name
  *
@@ -15,8 +17,6 @@ interface PosterOptions {
   businessName: string
   brandColor?: string // hex without '#', e.g. '4F46E5'
 }
-
-const GOOGLE_COLORS = ['#4285F4', '#EA4335', '#FBBC05', '#4285F4', '#34A853', '#EA4335']
 
 function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
@@ -54,7 +54,7 @@ function drawStar(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: numb
     else ctx.lineTo(x, y)
   }
   ctx.closePath()
-  ctx.fillStyle = '#FBBC05'
+  ctx.fillStyle = '#F5A623' // generic gold - the universal "rating star" color, not tied to any brand
   ctx.fill()
 }
 
@@ -98,25 +98,13 @@ export async function generateQRPoster({
   ctx.textAlign = 'center'
   ctx.fillStyle = '#ffffff'
   ctx.font = '600 30px Arial, sans-serif'
-  ctx.fillText('Scan to leave us a', width / 2, 70)
+  ctx.fillText('Scan to leave us a', width / 2, 80)
 
-  // Colourful "Google" wordmark.
-  const word = 'Google'
-  ctx.font = '700 56px Arial, sans-serif'
-  const letterWidths = word.split('').map((ch) => ctx.measureText(ch).width)
-  const totalWidth = letterWidths.reduce((a, b) => a + b, 0)
-  let cursorX = width / 2 - totalWidth / 2
-  const wordY = 130
-  word.split('').forEach((ch, i) => {
-    ctx.fillStyle = GOOGLE_COLORS[i % GOOGLE_COLORS.length]
-    ctx.textAlign = 'left'
-    ctx.fillText(ch, cursorX, wordY)
-    cursorX += letterWidths[i]
-  })
-  ctx.textAlign = 'center'
-  ctx.fillStyle = '#ffffff'
-  ctx.font = '600 30px Arial, sans-serif'
-  ctx.fillText('Review', width / 2, 180)
+  // "REVIEW" in big bold letters - generic, unmistakable rating language
+  // rather than any third-party brand mark. The star row (below, inside the
+  // white card) carries the visual "this is a rating" cue.
+  ctx.font = '700 52px Arial, sans-serif'
+  ctx.fillText('REVIEW', width / 2, 150)
 
   // 5-star row, centered inside the white card, above the QR code.
   const starY = cardY + 60

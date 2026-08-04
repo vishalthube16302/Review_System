@@ -28,13 +28,19 @@ export default function ChangePasswordPage() {
 
     setLoading(true)
     const { error: updateError } = await supabase.auth.updateUser({ password })
-    setLoading(false)
 
     if (updateError) {
+      setLoading(false)
       setError(updateError.message || 'Could not update password. Please try again.')
       return
     }
 
+    // Best-effort - even if this fails, the password itself is already
+    // changed, so it isn't worth blocking the user on it. Worst case they
+    // get redirected back here once more next login.
+    await fetch('/api/auth/clear-password-flag', { method: 'POST' }).catch(() => {})
+
+    setLoading(false)
     setSuccess(true)
     setTimeout(() => router.push('/dashboard'), 1500)
   }

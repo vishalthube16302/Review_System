@@ -7,6 +7,7 @@ export interface Profile {
   id: string
   role: 'super_admin' | 'restaurant_owner'
   customer_id: string | null
+  must_change_password: boolean
 }
 
 async function getSupabaseSession() {
@@ -55,7 +56,7 @@ export async function getCurrentProfile(): Promise<Profile | null> {
   const supabase = createAdminClient()
   const { data } = await supabase
     .from('profiles')
-    .select('id, role, customer_id')
+    .select('id, role, customer_id, must_change_password')
     .eq('id', session.user.id)
     .maybeSingle()
 
