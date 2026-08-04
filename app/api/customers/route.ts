@@ -11,6 +11,15 @@ export async function POST(request: Request) {
   const supabase = createAdminClient()
   const body = await request.json()
 
+  if (!body.email || !String(body.email).trim()) {
+    return NextResponse.json(
+      { error: 'Email is required - it becomes the customer\'s login username.' },
+      { status: 400 }
+    )
+  }
+
+  const DEFAULT_PASSWORD = 'Admin@123'
+
   try {
     // 1. Generate unique slug
     const slug = await uniqueSlug(body.business_name)
@@ -61,7 +70,60 @@ export async function POST(request: Request) {
 
     if (pageError) throw pageError
 
-    return NextResponse.json(page)
+    // 5. Create the restaurant owner's login account. email_confirm is set to
+    // true because this account is provisioned by us (super admin), not
+    // self-signed-up, so there's no signup email to confirm.
+    const { data: authUser, error: authCreateError } = await supabase.auth.admin.createUser({
+      email: body.email,
+      password: DEFAULT_PASSWORD,
+      email_confirm: true,
+    })
+
+    if (authCreateError || !authUser?.user) {
+      // The customer + branch rows are already committed at this point. We
+      // don't roll them back - instead we surface a clear error so the admin
+      // knows the login still needs to be created (e.g. email already in use
+      // by another account).
+      console.error('Error creating login account:', authCreateError)
+      return NextResponse.json(
+        {
+          ...page,
+          credentials: null,
+          credentialsError:
+            authCreateError?.message?.includes('already been registered')
+              ? 'That email already has a login account. Create one manually with a different email, or reuse the existing account.'
+              : 'Customer was created, but the login account could not be created automatically. Please create it manually in Supabase Auth.',
+        },
+        { status: 201 }
+      )
+    }
+
+    const { error: profileError } = await supabase.from('profiles').insert({
+      id: authUser.user.id,
+      role: 'restaurant_owner',
+      customer_id: customer.id,
+    })
+
+    if (profileError) {
+      console.error('Error creating profile:', profileError)
+      return NextResponse.json(
+        {
+          ...page,
+          credentials: null,
+          credentialsError:
+            'Login account was created but could not be linked to this customer. Please check Supabase.',
+        },
+        { status: 201 }
+      )
+    }
+
+    return NextResponse.json({
+      ...page,
+      credentials: {
+        username: body.email,
+        password: DEFAULT_PASSWORD,
+      },
+    })
   } catch (error) {
     console.error('Error creating customer:', error)
     return NextResponse.json({ error: 'Failed to create customer' }, { status: 500 })

@@ -17,6 +17,14 @@ export default function AddCustomerPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [subscriptionDays, setSubscriptionDays] = useState(180)
+  const [credentials, setCredentials] = useState<{ username: string; password: string } | null>(
+    null
+  )
+  const [credentialsError, setCredentialsError] = useState('')
+  const [copied, setCopied] = useState(false)
+  const [createdIds, setCreatedIds] = useState<{ customerId: string; branchId: string } | null>(
+    null
+  )
   const [form, setForm] = useState({
     business_name: '',
     owner_name: '',
@@ -68,7 +76,14 @@ export default function AddCustomerPage() {
       const data = await res.json()
 
       if (res.ok && data.id) {
-        router.push(`/admin/customers/${data.customer_id}/branches/${data.id}/qr`)
+        setCreatedIds({ customerId: data.customer_id, branchId: data.id })
+        if (data.credentials) {
+          setCredentials(data.credentials)
+        } else {
+          setCredentialsError(data.credentialsError || '')
+          // No credentials to show - go straight to the QR page.
+          router.push(`/admin/customers/${data.customer_id}/branches/${data.id}/qr`)
+        }
         return
       }
 
@@ -80,9 +95,68 @@ export default function AddCustomerPage() {
     }
   }
 
+  function copyCredentials() {
+    if (!credentials) return
+    navigator.clipboard.writeText(`Username: ${credentials.username}\nPassword: ${credentials.password}`)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  function continueToQR() {
+    if (createdIds) {
+      router.push(`/admin/customers/${createdIds.customerId}/branches/${createdIds.branchId}/qr`)
+    }
+  }
+
+  if (credentials) {
+    return (
+      <div className="max-w-md mx-auto mt-10">
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 text-center">
+          <div className="w-12 h-12 bg-green-50 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
+            ✓
+          </div>
+          <h1 className="text-xl font-bold text-slate-900 mb-1">Customer Created</h1>
+          <p className="text-sm text-slate-500 mb-6">
+            Share these login details with the customer. They can change the password after
+            logging in.
+          </p>
+
+          <div className="bg-slate-50 rounded-xl p-4 text-left space-y-3 mb-4">
+            <div>
+              <div className="text-xs text-slate-400 uppercase tracking-wide">Username (email)</div>
+              <div className="font-mono text-sm text-slate-900">{credentials.username}</div>
+            </div>
+            <div>
+              <div className="text-xs text-slate-400 uppercase tracking-wide">Password</div>
+              <div className="font-mono text-sm text-slate-900">{credentials.password}</div>
+            </div>
+          </div>
+
+          <button
+            onClick={copyCredentials}
+            className="w-full bg-slate-800 text-white py-2.5 rounded-lg text-sm font-medium hover:bg-slate-900 mb-3"
+          >
+            {copied ? 'Copied ✓' : 'Copy Username & Password'}
+          </button>
+          <button
+            onClick={continueToQR}
+            className="w-full bg-indigo-600 text-white py-2.5 rounded-lg text-sm font-medium hover:bg-indigo-700"
+          >
+            Continue to QR Code →
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="max-w-2xl mx-auto">
       <h1 className="text-2xl font-bold mb-6">Add New Customer</h1>
+      {credentialsError && (
+        <div className="bg-amber-50 text-amber-700 text-sm p-3 rounded-lg border border-amber-100 mb-4">
+          {credentialsError}
+        </div>
+      )}
 
       {form.business_name && (
         <div className="bg-indigo-50 rounded-lg p-3 mb-6 text-sm">
@@ -134,13 +208,18 @@ export default function AddCustomerPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
+          <label className="block text-sm font-medium text-slate-700 mb-1">Email *</label>
           <input
             type="email"
             value={form.email}
             onChange={(e) => set('email', e.target.value)}
+            placeholder="owner@business.com"
             className="w-full border border-slate-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            required
           />
+          <p className="text-xs text-slate-400 mt-1">
+            This becomes their login username for the Restaurant Admin panel.
+          </p>
         </div>
 
         <div>

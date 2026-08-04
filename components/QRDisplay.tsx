@@ -1,17 +1,20 @@
 'use client'
 
-import Image from 'next/image'
-
 interface QRDisplayProps {
-  dataUrl: string
+  posterUrl: string
   slug: string
 }
 
-export function QRDisplay({ dataUrl, slug }: QRDisplayProps) {
+export function QRDisplay({ posterUrl, slug }: QRDisplayProps) {
   return (
     <div className="flex flex-col items-center gap-4">
-      {dataUrl && (
-        <img src={dataUrl} alt="QR Code" className="w-64 h-64 border-4 border-white rounded-2xl shadow-lg" />
+      {posterUrl && (
+        // eslint-disable-next-line @next/next/no-img-element -- dynamically generated canvas data URL
+        <img
+          src={posterUrl}
+          alt="Google Review QR poster"
+          className="w-72 rounded-2xl shadow-lg border border-slate-200"
+        />
       )}
       <p className="font-mono text-sm text-indigo-600">reviewboost.in/{slug}</p>
     </div>
