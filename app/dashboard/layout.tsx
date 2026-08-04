@@ -23,9 +23,14 @@ export default async function DashboardLayout({
     <div className="min-h-screen bg-slate-50">
       <nav className="bg-slate-900 text-white px-6 py-4 flex items-center justify-between shadow-lg">
         <span className="font-bold text-lg">ReviewBoost</span>
-        <form action="/api/auth/signout" method="post">
-          <button className="text-sm text-slate-300 hover:text-white">Sign Out</button>
-        </form>
+        <div className="flex items-center gap-4">
+          <Link href="/dashboard/change-password" className="text-sm text-slate-300 hover:text-white">
+            Change Password
+          </Link>
+          <form action="/api/auth/signout" method="post">
+            <button className="text-sm text-slate-300 hover:text-white">Sign Out</button>
+          </form>
+        </div>
       </nav>
       <main className="p-6 max-w-5xl mx-auto">{children}</main>
     </div>

@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase-server'
 import { uniqueSlug } from '@/lib/slug'
 import { addDays } from 'date-fns'
 import { requireSuperAdmin } from '@/lib/auth-guard'
+import { generateTempPassword } from '@/lib/generate-password'
 
 export async function POST(request: Request) {
   const { error: authError } = await requireSuperAdmin()
@@ -10,6 +11,18 @@ export async function POST(request: Request) {
 
   const supabase = createAdminClient()
   const body = await request.json()
+
+  if (!body.email || !String(body.email).trim()) {
+    return NextResponse.json(
+      { error: 'Email is required - it becomes the customer\'s login username.' },
+      { status: 400 }
+    )
+  }
+
+  // A fresh random password per customer - never a shared static default.
+  // It's shown once on screen to the admin; the owner is forced to change
+  // it on first login via the must_change_password flag on their profile.
+  const tempPassword = generateTempPassword()
 
   try {
     // 1. Generate unique slug
@@ -61,7 +74,61 @@ export async function POST(request: Request) {
 
     if (pageError) throw pageError
 
-    return NextResponse.json(page)
+    // 5. Create the restaurant owner's login account. email_confirm is set to
+    // true because this account is provisioned by us (super admin), not
+    // self-signed-up, so there's no signup email to confirm.
+    const { data: authUser, error: authCreateError } = await supabase.auth.admin.createUser({
+      email: body.email,
+      password: tempPassword,
+      email_confirm: true,
+    })
+
+    if (authCreateError || !authUser?.user) {
+      // The customer + branch rows are already committed at this point. We
+      // don't roll them back - instead we surface a clear error so the admin
+      // knows the login still needs to be created (e.g. email already in use
+      // by another account).
+      console.error('Error creating login account:', authCreateError)
+      return NextResponse.json(
+        {
+          ...page,
+          credentials: null,
+          credentialsError:
+            authCreateError?.message?.includes('already been registered')
+              ? 'That email already has a login account. Create one manually with a different email, or reuse the existing account.'
+              : 'Customer was created, but the login account could not be created automatically. Please create it manually in Supabase Auth.',
+        },
+        { status: 201 }
+      )
+    }
+
+    const { error: profileError } = await supabase.from('profiles').insert({
+      id: authUser.user.id,
+      role: 'restaurant_owner',
+      customer_id: customer.id,
+      must_change_password: true,
+    })
+
+    if (profileError) {
+      console.error('Error creating profile:', profileError)
+      return NextResponse.json(
+        {
+          ...page,
+          credentials: null,
+          credentialsError:
+            'Login account was created but could not be linked to this customer. Please check Supabase.',
+        },
+        { status: 201 }
+      )
+    }
+
+    return NextResponse.json({
+      ...page,
+      credentials: {
+        username: body.email,
+        password: tempPassword,
+      },
+    })
   } catch (error) {
     console.error('Error creating customer:', error)
     return NextResponse.json({ error: 'Failed to create customer' }, { status: 500 })

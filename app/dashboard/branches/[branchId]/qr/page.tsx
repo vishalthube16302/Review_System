@@ -7,18 +7,21 @@ import { generateQRPoster } from '@/lib/qr-poster'
 import { QRDisplay } from '@/components/QRDisplay'
 import type { BusinessPage } from '@/types'
 
-export default function QRPage({
+export default function RestaurantQRPage({
   params,
 }: {
-  params: Promise<{ id: string; branchId: string }>
+  params: Promise<{ branchId: string }>
 }) {
-  const { id, branchId } = use(params)
+  const { branchId } = use(params)
   const [posterUrl, setPosterUrl] = useState('')
   const [business, setBusiness] = useState<BusinessPage | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
   useEffect(() => {
+    // /api/branches/[branchId] already scopes restaurant_owners to their own
+    // branches - a restaurant owner requesting someone else's branchId gets
+    // a 403 here, same as the admin version of this page.
     fetch(`/api/branches/${branchId}`)
       .then(async (r) => {
         if (!r.ok) {
@@ -97,11 +100,8 @@ export default function QRPage({
         </button>
       </div>
 
-      <Link
-        href={`/admin/customers/${id}`}
-        className="block mt-6 text-sm text-indigo-600 hover:text-indigo-700"
-      >
-        ← Back to {business?.business_name ?? 'customer'}
+      <Link href="/dashboard" className="block mt-6 text-sm text-indigo-600 hover:text-indigo-700">
+        ← Back to Dashboard
       </Link>
     </div>
   )

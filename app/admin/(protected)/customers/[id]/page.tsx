@@ -32,6 +32,28 @@ export default function CustomerDetailPage({
   const [amountPaid, setAmountPaid] = useState('')
   const [loadError, setLoadError] = useState('')
   const [saveError, setSaveError] = useState('')
+  const [resettingPassword, setResettingPassword] = useState(false)
+  const [resetPassword, setResetPassword] = useState('')
+  const [resetCopied, setResetCopied] = useState(false)
+  const [resetError, setResetError] = useState('')
+
+  async function handleResetPassword() {
+    setResettingPassword(true)
+    setResetError('')
+    try {
+      const res = await fetch(`/api/customers/${id}/reset-password`, { method: 'POST' })
+      const data = await res.json()
+      if (res.ok && data.password) {
+        setResetPassword(data.password)
+      } else {
+        setResetError(data.error || 'Failed to reset password.')
+      }
+    } catch {
+      setResetError('Network error - please try again.')
+    } finally {
+      setResettingPassword(false)
+    }
+  }
 
   useEffect(() => {
     fetch(`/api/customers/${id}`)
@@ -263,6 +285,44 @@ export default function CustomerDetailPage({
             {saving ? 'Saving...' : 'Save Account Changes'}
           </button>
         </form>
+      </div>
+
+      <div className="bg-white rounded-2xl p-6 shadow-sm">
+        <h2 className="text-lg font-semibold text-slate-900 mb-1">Login &amp; Password</h2>
+        <p className="text-sm text-slate-500 mb-4">
+          If the customer forgot their password or lost the credentials you shared at signup,
+          generate a new one here. They will be required to set their own password the next
+          time they log in.
+        </p>
+        {resetPassword ? (
+          <div className="bg-slate-50 rounded-xl p-4 space-y-3">
+            <div>
+              <div className="text-xs text-slate-400 uppercase tracking-wide">New Password</div>
+              <div className="font-mono text-sm text-slate-900">{resetPassword}</div>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                navigator.clipboard.writeText(resetPassword)
+                setResetCopied(true)
+                setTimeout(() => setResetCopied(false), 2000)
+              }}
+              className="w-full bg-slate-800 text-white py-2 rounded-lg text-sm font-medium hover:bg-slate-900"
+            >
+              {resetCopied ? 'Copied ✓' : 'Copy Password'}
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            disabled={resettingPassword}
+            onClick={handleResetPassword}
+            className="bg-white border border-slate-300 text-slate-700 py-2.5 px-4 rounded-lg text-sm font-medium hover:bg-slate-50 disabled:opacity-50"
+          >
+            {resettingPassword ? 'Generating...' : 'Reset Password'}
+          </button>
+        )}
+        {resetError && <p className="text-sm text-red-600 mt-2">{resetError}</p>}
       </div>
 
       <div className="bg-white rounded-2xl p-6 shadow-sm">

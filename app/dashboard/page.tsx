@@ -1,5 +1,6 @@
 import { createAdminClient } from '@/lib/supabase-server'
 import { getCurrentProfile } from '@/lib/auth-guard'
+import Link from 'next/link'
 import { StatusBadge } from '@/components/StatusBadge'
 import { FeedbackCard } from '@/components/FeedbackCard'
 import { ScansOverTimeChart, StarDistributionChart } from '@/components/DashboardCharts'
@@ -155,6 +156,12 @@ export default async function RestaurantDashboardPage() {
                   <div className="text-xs text-slate-400">avg ★</div>
                 </div>
                 <StatusBadge isActive={b.is_active} expiresAt={b.expires_at} />
+                <Link
+                  href={`/dashboard/branches/${b.id}/qr`}
+                  className="text-indigo-600 hover:text-indigo-700 font-medium"
+                >
+                  Download QR
+                </Link>
               </div>
             </div>
           ))}
