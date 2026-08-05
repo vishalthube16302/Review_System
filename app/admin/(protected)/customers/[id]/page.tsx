@@ -118,7 +118,13 @@ export default function CustomerDetailPage({
         throw new Error(body.error || 'Failed to save changes.')
       }
 
-      router.refresh()
+      // This page fetches its own data client-side (not via server props),
+      // so router.refresh() alone wouldn't actually pull the saved changes
+      // back in - refetch explicitly so the form and status badge reflect
+      // what's now in the database.
+      const refreshed = await fetch(`/api/customers/${id}`).then((r) => r.json())
+      setCustomer(refreshed)
+      setForm(refreshed)
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : 'Failed to save changes.')
     } finally {
@@ -284,14 +290,21 @@ export default function CustomerDetailPage({
             <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="checkbox"
-                checked={form.is_active || false}
-                onChange={(e) => set('is_active', String(e.target.checked))}
+                checked={!!form.is_active}
+                onChange={(e) => setForm((prev) => ({ ...prev, is_active: e.target.checked }))}
                 className="w-4 h-4"
               />
               <span className="text-sm font-medium text-slate-700">Account Active</span>
             </label>
             <StatusBadge isActive={!!form.is_active} expiresAt={form.paid_until || customer.paid_until} />
           </div>
+
+          {!form.is_active && (
+            <p className="text-xs text-amber-600 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
+              Unchecked - saving this will immediately take down this customer&apos;s review
+              page(s). Visitors will see the &quot;unavailable&quot; page instead.
+            </p>
+          )}
 
           {saveError && (
             <div className="bg-red-50 text-red-600 text-sm p-3 rounded-lg border border-red-100">
