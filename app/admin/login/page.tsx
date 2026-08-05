@@ -37,9 +37,9 @@ export default function AdminLoginPage() {
         </div>
         <h1 className="text-2xl font-bold text-white mb-2">ReviewBoost</h1>
         <p className="text-slate-400 text-sm mb-6">
-          Super Admin access only. If you're a restaurant owner, use the{' '}
+          Super Admin access only. If you&apos;re a business owner, use the{' '}
           <a href="/customer/login" className="text-indigo-400 hover:underline">
-            restaurant login
+            business login
           </a>
           .
         </p>

@@ -63,7 +63,7 @@ export default function CustomerLoginPage() {
             <div className="w-14 h-14 rounded-xl bg-indigo-50 flex items-center justify-center mx-auto mb-3 text-2xl">
               🏪
             </div>
-            <h1 className="text-xl font-bold text-slate-900">Restaurant Owner Login</h1>
+            <h1 className="text-xl font-bold text-slate-900">Business Owner Login</h1>
             <p className="text-slate-500 text-sm mt-1">Sign in to manage your reviews & feedback</p>
             <p className="text-xs text-slate-400 mt-3">
               Platform admin?{' '}

@@ -12,7 +12,7 @@ export default function LoginChooserPage() {
             href="/customer/login"
             className="block w-full bg-indigo-600 text-white py-3 rounded-lg font-semibold text-sm hover:bg-indigo-700"
           >
-            🏪 I'm a Restaurant Owner
+            🏪 I'm a Business Owner
           </Link>
           <Link
             href="/admin/login"

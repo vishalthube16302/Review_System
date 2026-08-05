@@ -17,7 +17,7 @@ export default function LandingPage() {
             <a href="#who-its-for">Who it&apos;s for</a>
             <a href="#features">Features</a>
             <Link href="/customer/login" className="nav-secondary">
-              Restaurant / business login
+              Business login
             </Link>
             <Link href="/admin/login" className="nav-cta">
               Login
