@@ -56,6 +56,7 @@ export async function PATCH(
         business_description: body.business_description,
         google_place_id: body.google_place_id,
         brand_color: body.brand_color,
+        logo_url: body.logo_url,
         is_active: body.is_active === 'true' || body.is_active === true,
       })
       .eq('id', branchId)

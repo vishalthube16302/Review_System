@@ -18,6 +18,40 @@ export default function EditBranchPage({
   const [form, setForm] = useState<Partial<BusinessPage>>({})
   const [loadError, setLoadError] = useState('')
   const [saveError, setSaveError] = useState('')
+  const [logoFile, setLogoFile] = useState<File | null>(null)
+  const [logoPreview, setLogoPreview] = useState('')
+  const [logoUploading, setLogoUploading] = useState(false)
+  const [logoError, setLogoError] = useState('')
+
+  function handleLogoSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    setLogoError('')
+    if (!file) return
+    if (file.size > 2 * 1024 * 1024) {
+      setLogoError('Logo must be under 2MB.')
+      return
+    }
+    setLogoFile(file)
+    setLogoPreview(URL.createObjectURL(file))
+  }
+
+  async function uploadLogoIfNeeded(): Promise<string | undefined> {
+    if (!logoFile) return undefined
+    setLogoUploading(true)
+    try {
+      const logoForm = new FormData()
+      logoForm.append('file', logoFile)
+      const res = await fetch('/api/upload-logo', { method: 'POST', body: logoForm })
+      const data = await res.json()
+      if (!res.ok) {
+        setLogoError(data.error || 'Failed to upload logo.')
+        return undefined
+      }
+      return data.logo_url as string
+    } finally {
+      setLogoUploading(false)
+    }
+  }
 
   useEffect(() => {
     fetch(`/api/branches/${branchId}`)
@@ -49,10 +83,18 @@ export default function EditBranchPage({
     setSaveError('')
 
     try {
+      const uploadedLogoUrl = await uploadLogoIfNeeded()
+      if (logoFile && !uploadedLogoUrl) {
+        // uploadLogoIfNeeded already set logoError - stop here rather than
+        // saving the rest of the form silently without the new logo.
+        setSaving(false)
+        return
+      }
+
       const res = await fetch(`/api/branches/${branchId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, logo_url: uploadedLogoUrl ?? form.logo_url }),
       })
 
       if (!res.ok) {
@@ -175,6 +217,34 @@ export default function EditBranchPage({
         </div>
 
         <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1">Business Logo</label>
+          <div className="flex items-center gap-4">
+            {logoPreview || branch.logo_url ? (
+              // eslint-disable-next-line @next/next/no-img-element -- local preview or remote logo, size unknown ahead of time
+              <img
+                src={logoPreview || branch.logo_url || ''}
+                alt="Logo"
+                className="w-16 h-16 rounded-lg object-cover border border-slate-200"
+              />
+            ) : (
+              <div className="w-16 h-16 rounded-lg border border-dashed border-slate-300 flex items-center justify-center text-slate-300 text-xs">
+                No logo
+              </div>
+            )}
+            <input
+              type="file"
+              accept="image/png,image/jpeg,image/webp,image/svg+xml"
+              onChange={handleLogoSelect}
+              className="text-sm text-slate-600 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-indigo-50 file:text-indigo-700 file:text-sm file:font-medium hover:file:bg-indigo-100"
+            />
+          </div>
+          {logoError && <p className="text-xs text-red-600 mt-1">{logoError}</p>}
+          <p className="text-xs text-slate-400 mt-1">
+            PNG, JPEG, WEBP, or SVG, under 2MB. Shown on the public review page.
+          </p>
+        </div>
+
+        <div>
           <label className="block text-sm font-medium text-slate-700 mb-1">Brand Color</label>
           <div className="flex items-center gap-3">
             <input
@@ -197,12 +267,17 @@ export default function EditBranchPage({
           <label className="flex items-center gap-2 cursor-pointer">
             <input
               type="checkbox"
-              checked={form.is_active || false}
-              onChange={(e) => set('is_active', String(e.target.checked))}
+              checked={!!form.is_active}
+              onChange={(e) => setForm((prev) => ({ ...prev, is_active: e.target.checked }))}
               className="w-4 h-4"
             />
             <span className="text-sm font-medium text-slate-700">Active (QR code works)</span>
           </label>
+          {!form.is_active && (
+            <p className="text-xs text-amber-600 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2 mt-2">
+              Unchecked - saving this will immediately take down this branch&apos;s review page.
+            </p>
+          )}
         </div>
 
         {saveError && (
@@ -213,10 +288,10 @@ export default function EditBranchPage({
 
         <button
           type="submit"
-          disabled={saving}
+          disabled={saving || logoUploading}
           className="w-full bg-indigo-600 text-white py-3 rounded-lg font-semibold hover:bg-indigo-700 disabled:opacity-50"
         >
-          {saving ? 'Saving...' : 'Save Changes'}
+          {logoUploading ? 'Uploading logo...' : saving ? 'Saving...' : 'Save Changes'}
         </button>
       </form>
     </div>
