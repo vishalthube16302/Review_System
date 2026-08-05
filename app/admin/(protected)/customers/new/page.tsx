@@ -253,7 +253,7 @@ export default function AddCustomerPage() {
             required
           />
           <p className="text-xs text-slate-400 mt-1">
-            This becomes their login username for the Restaurant Admin panel.
+            This becomes their login username for the Business Admin panel.
           </p>
         </div>
 
