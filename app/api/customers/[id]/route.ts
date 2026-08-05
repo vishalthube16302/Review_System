@@ -71,3 +71,62 @@ export async function PATCH(
     return NextResponse.json({ error: 'Failed to update customer' }, { status: 500 })
   }
 }
+
+// Permanently deletes a customer and everything tied to it: branches
+// (business_pages), feedback, scan sessions, renewal history, their
+// profile row, AND their actual Supabase Auth login - not just the DB
+// rows. Auth users aren't linked by a foreign key, so they're the one
+// thing we have to clean up explicitly; everything else cascades at the
+// database level (business_pages/profiles CASCADE from customers, and
+// scan_sessions/renewal_history/private_feedback CASCADE from
+// business_pages).
+//
+// Irreversible. The customer's review URL and QR code stop resolving
+// immediately once this completes.
+export async function DELETE(
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { error: authError } = await requireSuperAdmin()
+  if (authError) return authError
+
+  const { id } = await params
+  const supabase = createAdminClient()
+
+  const { data: customer, error: fetchError } = await supabase
+    .from('customers')
+    .select('id')
+    .eq('id', id)
+    .maybeSingle()
+
+  if (fetchError || !customer) {
+    return NextResponse.json({ error: 'Customer not found' }, { status: 404 })
+  }
+
+  // Find and remove the login account first - it has no FK to `customers`,
+  // so nothing else in this flow will clean it up for us.
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('customer_id', id)
+    .eq('role', 'restaurant_owner')
+    .maybeSingle()
+
+  if (profile) {
+    const { error: deleteAuthError } = await supabase.auth.admin.deleteUser(profile.id)
+    if (deleteAuthError) {
+      // Not fatal - proceed with deleting the customer record anyway, but
+      // log it so a leftover login can be found and cleaned up manually.
+      console.error('Error deleting auth user during customer delete:', deleteAuthError)
+    }
+  }
+
+  const { error: deleteError } = await supabase.from('customers').delete().eq('id', id)
+
+  if (deleteError) {
+    console.error('Error deleting customer:', deleteError)
+    return NextResponse.json({ error: 'Failed to delete customer' }, { status: 500 })
+  }
+
+  return NextResponse.json({ success: true })
+}
