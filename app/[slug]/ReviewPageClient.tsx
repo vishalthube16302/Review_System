@@ -20,6 +20,7 @@ export default function ReviewPageClient({
   const [submitError, setSubmitError] = useState('')
   const [feedbackText, setFeedbackText] = useState('')
   const [copied, setCopied] = useState(false)
+  const [showCopyToast, setShowCopyToast] = useState(false)
   const [showFeedback, setShowFeedback] = useState(false)
   const [loadingReviews, setLoadingReviews] = useState(false)
 
@@ -79,6 +80,11 @@ export default function ReviewPageClient({
     try {
       await navigator.clipboard.writeText(reviews[selected])
       setCopied(true)
+      // Brief confirmation so it's clear something happened before the new
+      // tab opens - otherwise the copy is invisible and people aren't sure
+      // whether they need to type the review themselves.
+      setShowCopyToast(true)
+      setTimeout(() => setShowCopyToast(false), 3000)
     } catch {
       setCopied(false)
     }
@@ -231,6 +237,14 @@ export default function ReviewPageClient({
         <p className="w-full max-w-md text-center text-red-600 text-sm mt-3 bg-red-50 rounded-lg p-3">
           {submitError}
         </p>
+      )}
+
+      {/* Copy confirmation toast */}
+      {showCopyToast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-sm font-medium px-5 py-3 rounded-full shadow-lg flex items-center gap-2 z-50">
+          <span>✓</span>
+          <span>Review copied — paste it in the Google box</span>
+        </div>
       )}
     </div>
   )
