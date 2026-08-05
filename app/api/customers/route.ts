@@ -65,6 +65,7 @@ export async function POST(request: Request) {
         business_category: body.business_category,
         business_description: body.business_description,
         brand_color: body.brand_color,
+        logo_url: body.logo_url || null,
         plan: body.plan,
         expires_at,
         is_active: true,

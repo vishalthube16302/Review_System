@@ -25,6 +25,9 @@ export default function AddCustomerPage() {
   const [createdIds, setCreatedIds] = useState<{ customerId: string; branchId: string } | null>(
     null
   )
+  const [logoFile, setLogoFile] = useState<File | null>(null)
+  const [logoPreview, setLogoPreview] = useState('')
+  const [logoError, setLogoError] = useState('')
   const [form, setForm] = useState({
     business_name: '',
     owner_name: '',
@@ -61,16 +64,48 @@ export default function AddCustomerPage() {
   const todayLabel = today.toLocaleDateString('en-US', dateFormat)
   const expiryLabel = expiryDate.toLocaleDateString('en-US', dateFormat)
 
+  function handleLogoSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    setLogoError('')
+    if (!file) {
+      setLogoFile(null)
+      setLogoPreview('')
+      return
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      setLogoError('Logo must be under 2MB.')
+      return
+    }
+    setLogoFile(file)
+    setLogoPreview(URL.createObjectURL(file))
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
     setError('')
 
     try {
+      // Upload the logo first (if one was picked) so we have its public URL
+      // to attach to the customer record we're about to create.
+      let logo_url = ''
+      if (logoFile) {
+        const logoForm = new FormData()
+        logoForm.append('file', logoFile)
+        const uploadRes = await fetch('/api/upload-logo', { method: 'POST', body: logoForm })
+        const uploadData = await uploadRes.json()
+        if (!uploadRes.ok) {
+          setError(uploadData.error || 'Failed to upload logo. Please try again.')
+          setLoading(false)
+          return
+        }
+        logo_url = uploadData.logo_url
+      }
+
       const res = await fetch('/api/customers', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, subscription_days: subscriptionDays }),
+        body: JSON.stringify({ ...form, logo_url, subscription_days: subscriptionDays }),
       })
 
       const data = await res.json()
@@ -218,7 +253,7 @@ export default function AddCustomerPage() {
             required
           />
           <p className="text-xs text-slate-400 mt-1">
-            This becomes their login username for the Restaurant Admin panel.
+            This becomes their login username for the Business Admin panel.
           </p>
         </div>
 
@@ -308,6 +343,35 @@ export default function AddCustomerPage() {
           <p className="text-xs text-slate-400 mt-1">
             One short line is enough - do not include specific product/staff names, just what
             kind of work they do.
+          </p>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1">Business Logo</label>
+          <div className="flex items-center gap-4">
+            {logoPreview ? (
+              // eslint-disable-next-line @next/next/no-img-element -- local object URL preview, not a remote asset
+              <img
+                src={logoPreview}
+                alt="Logo preview"
+                className="w-16 h-16 rounded-lg object-cover border border-slate-200"
+              />
+            ) : (
+              <div className="w-16 h-16 rounded-lg border border-dashed border-slate-300 flex items-center justify-center text-slate-300 text-xs">
+                No logo
+              </div>
+            )}
+            <input
+              type="file"
+              accept="image/png,image/jpeg,image/webp,image/svg+xml"
+              onChange={handleLogoSelect}
+              className="text-sm text-slate-600 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-indigo-50 file:text-indigo-700 file:text-sm file:font-medium hover:file:bg-indigo-100"
+            />
+          </div>
+          {logoError && <p className="text-xs text-red-600 mt-1">{logoError}</p>}
+          <p className="text-xs text-slate-400 mt-1">
+            Optional. PNG, JPEG, WEBP, or SVG, under 2MB. Shown on the customer&apos;s public
+            review page.
           </p>
         </div>
 

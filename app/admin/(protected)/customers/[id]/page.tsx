@@ -36,6 +36,28 @@ export default function CustomerDetailPage({
   const [resetPassword, setResetPassword] = useState('')
   const [resetCopied, setResetCopied] = useState(false)
   const [resetError, setResetError] = useState('')
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
+  const [deleteConfirmText, setDeleteConfirmText] = useState('')
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState('')
+
+  async function handleDelete() {
+    setDeleting(true)
+    setDeleteError('')
+    try {
+      const res = await fetch(`/api/customers/${id}`, { method: 'DELETE' })
+      const data = await res.json()
+      if (res.ok) {
+        router.push('/admin/customers')
+        return
+      }
+      setDeleteError(data.error || 'Failed to delete customer.')
+    } catch {
+      setDeleteError('Network error - please try again.')
+    } finally {
+      setDeleting(false)
+    }
+  }
 
   async function handleResetPassword() {
     setResettingPassword(true)
@@ -96,7 +118,13 @@ export default function CustomerDetailPage({
         throw new Error(body.error || 'Failed to save changes.')
       }
 
-      router.refresh()
+      // This page fetches its own data client-side (not via server props),
+      // so router.refresh() alone wouldn't actually pull the saved changes
+      // back in - refetch explicitly so the form and status badge reflect
+      // what's now in the database.
+      const refreshed = await fetch(`/api/customers/${id}`).then((r) => r.json())
+      setCustomer(refreshed)
+      setForm(refreshed)
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : 'Failed to save changes.')
     } finally {
@@ -262,14 +290,21 @@ export default function CustomerDetailPage({
             <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="checkbox"
-                checked={form.is_active || false}
-                onChange={(e) => set('is_active', String(e.target.checked))}
+                checked={!!form.is_active}
+                onChange={(e) => setForm((prev) => ({ ...prev, is_active: e.target.checked }))}
                 className="w-4 h-4"
               />
               <span className="text-sm font-medium text-slate-700">Account Active</span>
             </label>
             <StatusBadge isActive={!!form.is_active} expiresAt={form.paid_until || customer.paid_until} />
           </div>
+
+          {!form.is_active && (
+            <p className="text-xs text-amber-600 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
+              Unchecked - saving this will immediately take down this customer&apos;s review
+              page(s). Visitors will see the &quot;unavailable&quot; page instead.
+            </p>
+          )}
 
           {saveError && (
             <div className="bg-red-50 text-red-600 text-sm p-3 rounded-lg border border-red-100">
@@ -457,6 +492,59 @@ export default function CustomerDetailPage({
             </div>
           ))}
         </div>
+      </div>
+
+      <div className="bg-white rounded-2xl p-6 shadow-sm border border-red-100">
+        <h2 className="text-lg font-semibold text-red-700 mb-1">Danger Zone</h2>
+        <p className="text-sm text-slate-500 mb-4">
+          Permanently deletes this customer, all their branches, feedback, scan history, and
+          their login account. This cannot be undone.
+        </p>
+        {!confirmingDelete ? (
+          <button
+            type="button"
+            onClick={() => setConfirmingDelete(true)}
+            className="bg-white border border-red-300 text-red-600 py-2.5 px-4 rounded-lg text-sm font-medium hover:bg-red-50"
+          >
+            Delete Customer
+          </button>
+        ) : (
+          <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+            <p className="text-sm text-red-800 mb-3">
+              Type the business name (<strong>{customer.business_name}</strong>) to confirm
+              deletion.
+            </p>
+            <input
+              type="text"
+              value={deleteConfirmText}
+              onChange={(e) => setDeleteConfirmText(e.target.value)}
+              className="w-full border border-red-300 rounded-lg px-4 py-2 text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-red-400"
+              placeholder={customer.business_name}
+            />
+            {deleteError && <p className="text-sm text-red-700 mb-3">{deleteError}</p>}
+            <div className="flex gap-3">
+              <button
+                type="button"
+                disabled={deleteConfirmText !== customer.business_name || deleting}
+                onClick={handleDelete}
+                className="bg-red-600 text-white py-2 px-4 rounded-lg text-sm font-medium hover:bg-red-700 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                {deleting ? 'Deleting...' : 'Permanently Delete'}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setConfirmingDelete(false)
+                  setDeleteConfirmText('')
+                  setDeleteError('')
+                }}
+                className="text-sm text-slate-500 hover:text-slate-700"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
