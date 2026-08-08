@@ -17,14 +17,30 @@ function areaOrCity(business: BusinessPage): string {
 // -> "sell and service computers and laptops" - just the first clause, so
 // generated lines stay short and readable instead of running the entire
 // description into one long sentence.
+//
+// Also guards against descriptions typed as a list of keywords/tags (e.g.
+// "Air Compressor Seller,Oil-Free Compressor,Pune-Based Supplier...")
+// instead of a sentence following "They ..." - using that verbatim would
+// read as broken grammar ("They Air Compressor Seller"), so if the first
+// clause doesn't look like a normal verb phrase, we skip it here and fall
+// back to the simpler generic lines instead. The AI prompt has its own
+// instruction to rewrite keyword-style descriptions into natural language,
+// but this static path has no model to do that rewriting, so playing it
+// safe is better than shipping a grammatically broken review.
+const COMMON_VERBS = /^(sell|sells|provide|provides|offer|offers|repair|repairs|service|services|make|makes|manufacture|manufactures|supply|supplies|build|builds|install|installs|fix|fixes|run|runs|do|does|specialize|specializes|design|designs|deliver|delivers|handle|handles|do)\b/i
+
 function whatTheyDo(business: BusinessPage): string | null {
   if (!business.business_description) return null
   const firstClause = business.business_description
     .trim()
     .replace(/\.$/, '')
     .split(/,| and (?=\w+ing\b)/i)[0]
-  const words = firstClause.trim().split(/\s+/)
-  return words.length > 8 ? words.slice(0, 8).join(' ') : firstClause.trim()
+    .trim()
+
+  if (!COMMON_VERBS.test(firstClause)) return null
+
+  const words = firstClause.split(/\s+/)
+  return words.length > 8 ? words.slice(0, 8).join(' ') : firstClause
 }
 
 /**

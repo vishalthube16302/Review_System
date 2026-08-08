@@ -189,10 +189,21 @@ export default function EditBranchPage({
             type="text"
             value={form.business_description || ''}
             onChange={(e) => set('business_description', e.target.value)}
-            placeholder="e.g. sell and service industrial air compressors (follows the word 'They ...')"
-            maxLength={150}
+            placeholder="e.g. repair laptops, sell new computers, and refill printer cartridges"
+            maxLength={200}
             className="w-full border border-slate-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
+          <div className="flex items-center justify-between mt-1">
+            <p className="text-xs text-slate-400">
+              Write it as one plain sentence, not a list of keywords. Used as:{' '}
+              <span className="italic">
+                &quot;They {form.business_description || '...'}&quot;
+              </span>
+            </p>
+            <span className="text-xs text-slate-300 shrink-0 ml-2">
+              {(form.business_description || '').length}/200
+            </span>
+          </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
