@@ -336,14 +336,19 @@ export default function AddCustomerPage() {
             type="text"
             value={form.business_description}
             onChange={(e) => set('business_description', e.target.value)}
-            placeholder="e.g. sell and service industrial air compressors (follows the word 'They ...')"
-            maxLength={150}
+            placeholder="e.g. repair laptops, sell new computers, and refill printer cartridges"
+            maxLength={200}
             className="w-full border border-slate-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
-          <p className="text-xs text-slate-400 mt-1">
-            One short line is enough - do not include specific product/staff names, just what
-            kind of work they do.
-          </p>
+          <div className="flex items-center justify-between mt-1">
+            <p className="text-xs text-slate-400">
+              Write it as one plain sentence, like you are telling a friend - not a list of
+              keywords. It gets used as: <span className="italic">&quot;They {form.business_description || '...'}&quot;</span>
+            </p>
+            <span className="text-xs text-slate-300 shrink-0 ml-2">
+              {form.business_description.length}/200
+            </span>
+          </div>
         </div>
 
         <div>
