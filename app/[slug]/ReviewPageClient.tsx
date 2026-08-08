@@ -23,6 +23,18 @@ export default function ReviewPageClient({
   const [showCopyToast, setShowCopyToast] = useState(false)
   const [showFeedback, setShowFeedback] = useState(false)
   const [loadingReviews, setLoadingReviews] = useState(false)
+  const [reviewSource, setReviewSource] = useState<'ai' | 'template_fallback' | null>(null)
+
+  // Hidden diagnostic tag - add ?debug=1 to the review URL to see whether
+  // reviews came from the real AI call or the backup templates, without
+  // showing this to every customer. e.g. reviewboost.in/your-slug?debug=1
+  // Read directly from the browser rather than useSearchParams so this
+  // component doesn't need a Suspense boundary just for a debug flag.
+  const [debugMode] = useState(
+    () =>
+      typeof window !== 'undefined' &&
+      new URLSearchParams(window.location.search).get('debug') === '1'
+  )
 
   async function handleStarClick(n: number) {
     setStars(n)
@@ -32,6 +44,7 @@ export default function ReviewPageClient({
 
     if (n >= 4) {
       setReviews([])
+      setReviewSource(null)
       setLoadingReviews(true)
 
       // Show instant static suggestions immediately so the customer isn't staring
@@ -48,8 +61,12 @@ export default function ReviewPageClient({
         if (Array.isArray(data.reviews) && data.reviews.length > 0) {
           setReviews(data.reviews)
         }
+        if (data.source === 'ai' || data.source === 'template_fallback') {
+          setReviewSource(data.source)
+        }
       } catch {
         // Network error - the static suggestions set above stay on screen.
+        setReviewSource('template_fallback')
       } finally {
         setLoadingReviews(false)
       }
@@ -167,9 +184,27 @@ export default function ReviewPageClient({
       {/* Review Cards or Feedback Form */}
       {reviews.length > 0 && (
         <div className="w-full max-w-md space-y-3 mb-6">
-          <p className="text-sm text-slate-500 font-medium">
-            {loadingReviews ? 'Personalizing your review...' : 'Select your review:'}
-          </p>
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-slate-500 font-medium">
+              {loadingReviews ? 'Personalizing your review...' : 'Select your review:'}
+            </p>
+            {debugMode && reviewSource && (
+              <span
+                className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                  reviewSource === 'ai'
+                    ? 'bg-green-100 text-green-700'
+                    : 'bg-amber-100 text-amber-700'
+                }`}
+                title={
+                  reviewSource === 'ai'
+                    ? 'These came from the real AI call'
+                    : 'AI call failed or is not configured - showing backup templates'
+                }
+              >
+                {reviewSource === 'ai' ? 'AI ✓' : 'Backup ⚠'}
+              </span>
+            )}
+          </div>
           {reviews.map((review, i) => (
             <button
               key={i}
