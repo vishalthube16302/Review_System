@@ -91,12 +91,11 @@ body {
   font-size: 1.1rem;
 }
 
-.landing .logo-mark {
-  width: 20px;
-  height: 20px;
-  border-radius: 6px;
-  background: linear-gradient(135deg, var(--primary), var(--accent));
-  display: inline-block;
+.landing .logo-icon {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  flex-shrink: 0;
 }
 
 .landing .nav-links {

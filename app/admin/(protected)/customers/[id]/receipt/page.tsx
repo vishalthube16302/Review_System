@@ -36,9 +36,13 @@ export default async function ReceiptPage({
     <div className="max-w-lg mx-auto py-10 print:py-0">
       <div className="bg-white rounded-2xl shadow-sm p-8 print:shadow-none print:p-0">
         <div className="flex items-center justify-between mb-6 border-b border-slate-200 pb-6">
-          <div>
-            <h1 className="text-xl font-bold text-slate-900">ReviewBoost</h1>
-            <p className="text-xs text-slate-400">Payment Receipt</p>
+          <div className="flex items-center gap-3">
+            {/* eslint-disable-next-line @next/next/no-img-element -- static public asset */}
+            <img src="/logo-icon.png" alt="Review Booster" className="w-10 h-10" />
+            <div>
+              <h1 className="text-xl font-bold text-slate-900">Review Booster</h1>
+              <p className="text-xs text-slate-400">Payment Receipt</p>
+            </div>
           </div>
           <div className="text-right text-sm">
             <p className="text-slate-500">Receipt #{receiptNumber}</p>

@@ -16,7 +16,7 @@ export default function ExpiredPage() {
             href="/"
             className="inline-block bg-indigo-600 text-white text-sm font-medium px-5 py-2.5 rounded-lg hover:bg-indigo-700"
           >
-            Learn about ReviewBoost
+            Learn about Review Booster
           </Link>
         </div>
       </div>

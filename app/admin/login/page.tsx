@@ -35,7 +35,9 @@ export default function AdminLoginPage() {
             Platform Admin
           </span>
         </div>
-        <h1 className="text-2xl font-bold text-white mb-2">ReviewBoost</h1>
+        {/* eslint-disable-next-line @next/next/no-img-element -- static public asset */}
+        <img src="/logo-icon.png" alt="Review Booster" className="w-12 h-12 mb-3" />
+        <h1 className="text-2xl font-bold text-white mb-2">Review Booster</h1>
         <p className="text-slate-400 text-sm mb-6">
           Super Admin access only. If you&apos;re a business owner, use the{' '}
           <a href="/customer/login" className="text-indigo-400 hover:underline">
