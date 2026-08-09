@@ -147,10 +147,26 @@ export async function generateQRPoster({
   ctx.font = '400 18px Arial, sans-serif'
   ctx.fillText('Open your camera and point at the code', width / 2, nameY + 32)
 
-  // Footer branding.
-  ctx.fillStyle = '#94a3b8'
+  // Footer branding - small icon + text, centered together.
   ctx.font = '500 14px Arial, sans-serif'
-  ctx.fillText('Powered by ReviewBoost', width / 2, height - 25)
+  const footerText = 'Powered by Review Booster'
+  const footerTextWidth = ctx.measureText(footerText).width
+  const footerIconSize = 18
+  const footerGap = 6
+  const footerGroupWidth = footerIconSize + footerGap + footerTextWidth
+  const footerY = height - 34
+  const footerIconX = width / 2 - footerGroupWidth / 2
+  try {
+    const logoIcon = await loadImage('/logo-icon.png')
+    ctx.drawImage(logoIcon, footerIconX, footerY, footerIconSize, footerIconSize)
+  } catch {
+    // Non-critical - if the icon fails to load (e.g. offline), the text
+    // alone still communicates the branding.
+  }
+  ctx.fillStyle = '#94a3b8'
+  ctx.textAlign = 'left'
+  ctx.fillText(footerText, footerIconX + footerIconSize + footerGap, footerY + footerIconSize - 4)
+  ctx.textAlign = 'center'
 
   return canvas.toDataURL('image/png')
 }

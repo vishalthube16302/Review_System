@@ -18,7 +18,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   return (
     <div className="min-h-screen bg-slate-50">
       <nav className="bg-slate-900 text-white px-6 py-4 flex items-center justify-between shadow-lg">
-        <span className="font-bold text-lg">ReviewBoost Admin</span>
+        <span className="font-bold text-lg flex items-center gap-2">
+          {/* eslint-disable-next-line @next/next/no-img-element -- static public asset */}
+          <img src="/logo-icon.png" alt="Review Booster" className="w-7 h-7" />
+          Review Booster Admin
+        </span>
         <div className="flex gap-6 text-sm">
           <Link href="/admin" className="hover:text-indigo-400">
             Dashboard

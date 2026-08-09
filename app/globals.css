@@ -91,12 +91,11 @@ body {
   font-size: 1.1rem;
 }
 
-.landing .logo-mark {
-  width: 20px;
-  height: 20px;
-  border-radius: 6px;
-  background: linear-gradient(135deg, var(--primary), var(--accent));
-  display: inline-block;
+.landing .logo-icon {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  flex-shrink: 0;
 }
 
 .landing .nav-links {
@@ -170,8 +169,21 @@ body {
   color: var(--primary);
 }
 
+.landing .hero-punch {
+  margin-top: 18px;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.landing .hero-punch .dot {
+  color: var(--primary);
+  margin: 0 2px;
+  font-weight: 400;
+}
+
 .landing .hero-sub {
-  margin-top: 20px;
+  margin-top: 14px;
   font-size: 1.1rem;
   color: var(--muted);
   max-width: 560px;
@@ -569,6 +581,17 @@ body {
 
 .landing .cta .btn {
   margin-top: 28px;
+}
+
+.landing .cta-existing {
+  margin-top: 18px !important;
+  font-size: 0.85rem;
+}
+
+.landing .cta-existing-link {
+  color: white;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 /* ---------- Footer ---------- */

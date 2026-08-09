@@ -60,9 +60,8 @@ export default function CustomerLoginPage() {
       <div className="bg-white rounded-2xl p-8 w-full max-w-sm shadow-xl border border-slate-100">
         {step === 'email' || !branding?.found ? (
           <div className="text-center mb-6">
-            <div className="w-14 h-14 rounded-xl bg-indigo-50 flex items-center justify-center mx-auto mb-3 text-2xl">
-              🏪
-            </div>
+            {/* eslint-disable-next-line @next/next/no-img-element -- static public asset */}
+            <img src="/logo-icon.png" alt="Review Booster" className="w-14 h-14 mx-auto mb-3" />
             <h1 className="text-xl font-bold text-slate-900">Business Owner Login</h1>
             <p className="text-slate-500 text-sm mt-1">Sign in to manage your reviews & feedback</p>
             <p className="text-xs text-slate-400 mt-3">

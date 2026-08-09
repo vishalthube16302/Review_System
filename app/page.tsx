@@ -9,8 +9,9 @@ export default function LandingPage() {
       <header className="nav">
         <div className="nav-inner">
           <div className="logo">
-            <span className="logo-mark" aria-hidden="true" />
-            ReviewBoost
+            {/* eslint-disable-next-line @next/next/no-img-element -- static public asset, no next/image needed for a tiny nav icon */}
+            <img src="/logo-icon.png" alt="Review Booster" className="logo-icon" />
+            Review Booster
           </div>
           <div className="nav-links">
             <a href="#how-it-works">How it works</a>
@@ -20,9 +21,9 @@ export default function LandingPage() {
             <Link href="/customer/login" className="nav-secondary">
               Business login
             </Link>
-            <Link href="/admin/login" className="nav-cta">
-              Login
-            </Link>
+            <a href="#pricing" className="nav-cta">
+              Get Started
+            </a>
           </div>
         </div>
       </header>
@@ -37,6 +38,10 @@ export default function LandingPage() {
               <br />
               into a <span className="hl">5-star Google review</span>
             </h1>
+            <p className="hero-punch">
+              No typing. <span className="dot">&bull;</span> No guessing what to write.{' '}
+              <span className="dot">&bull;</span> No bad reviews going public.
+            </p>
             <p className="hero-sub">
               One QR code. One tap. A short, honest, AI-written review your customers actually
               want to post &mdash; and a private channel to catch unhappy ones before they ever
@@ -51,9 +56,9 @@ export default function LandingPage() {
               <a href="#how-it-works" className="btn btn-primary">
                 See how it works
               </a>
-              <Link href="/admin/login" className="btn btn-ghost">
-                Login to your account
-              </Link>
+              <a href="#pricing" className="btn btn-ghost">
+                View pricing
+              </a>
             </div>
           </div>
 
@@ -208,7 +213,7 @@ export default function LandingPage() {
           <p className="eyebrow center">Built for any business</p>
           <h2 className="section-title center">Not just restaurants</h2>
           <p className="section-sub center">
-            ReviewBoost adapts the review it writes to what you actually do &mdash; a factory
+            Review Booster adapts the review it writes to what you actually do &mdash; a factory
             gets reviews about delivery and quality, a salon gets reviews about staff and
             service.
           </p>
@@ -293,7 +298,7 @@ export default function LandingPage() {
                 <li>1 branch</li>
                 <li>Private feedback capture</li>
               </ul>
-              <a href="mailto:hello@reviewboost.in?subject=ReviewBoost%20-%20Starter%20plan" className="btn btn-ghost btn-full">
+              <a href="mailto:hello@reviewboost.in?subject=Review%20Booster%20-%20Starter%20plan" className="btn btn-ghost btn-full">
                 Get started
               </a>
             </div>
@@ -310,7 +315,7 @@ export default function LandingPage() {
                 <li>Up to 3 branches</li>
                 <li>Analytics dashboard</li>
               </ul>
-              <a href="mailto:hello@reviewboost.in?subject=ReviewBoost%20-%20Growth%20plan" className="btn btn-primary btn-full">
+              <a href="mailto:hello@reviewboost.in?subject=Review%20Booster%20-%20Growth%20plan" className="btn btn-primary btn-full">
                 Get started
               </a>
             </div>
@@ -327,7 +332,7 @@ export default function LandingPage() {
                 <li>Unlimited branches</li>
                 <li>Priority support</li>
               </ul>
-              <a href="mailto:hello@reviewboost.in?subject=ReviewBoost%20-%20Business%20plan" className="btn btn-ghost btn-full">
+              <a href="mailto:hello@reviewboost.in?subject=Review%20Booster%20-%20Business%20plan" className="btn btn-ghost btn-full">
                 Get started
               </a>
             </div>
@@ -336,22 +341,31 @@ export default function LandingPage() {
 
         {/* ---------- Final CTA ---------- */}
         <section className="cta">
-          <h2>Ready to see it on your own business?</h2>
-          <p>Accounts are set up directly &mdash; log in or get in touch to get started.</p>
-          <Link href="/admin/login" className="btn btn-primary btn-lg">
-            Login to your account
-          </Link>
+          <h2>Ready to get more 5-star reviews?</h2>
+          <p>Tell us about your business and we&apos;ll get you set up &mdash; no self-signup forms, just a quick email.</p>
+          <a
+            href="mailto:hello@reviewboost.in?subject=Review%20Booster%20-%20New%20Business%20Inquiry"
+            className="btn btn-primary btn-lg"
+          >
+            Get in touch
+          </a>
+          <p className="cta-existing">
+            Already a customer?{' '}
+            <Link href="/customer/login" className="cta-existing-link">
+              Log in here
+            </Link>
+          </p>
         </section>
       </main>
 
       <footer className="footer">
         <div className="logo footer-logo">
-          <span className="logo-mark" aria-hidden="true" />
-          ReviewBoost
+          {/* eslint-disable-next-line @next/next/no-img-element -- static public asset */}
+          <img src="/logo-icon.png" alt="Review Booster" className="logo-icon" />
+          Review Booster
         </div>
         <div className="footer-links">
           <Link href="/customer/login">Business login</Link>
-          <Link href="/admin/login">Admin login</Link>
         </div>
       </footer>
     </div>

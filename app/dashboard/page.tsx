@@ -133,7 +133,7 @@ export default async function RestaurantDashboardPage() {
         <div className="bg-white rounded-xl shadow-sm divide-y divide-slate-200">
           {branchStats.length === 0 && (
             <p className="p-6 text-slate-500 text-sm">
-              No branches set up yet - contact ReviewBoost support to get started.
+              No branches set up yet - contact Review Booster support to get started.
             </p>
           )}
           {branchStats.map((b) => (

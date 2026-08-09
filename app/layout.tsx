@@ -21,8 +21,17 @@ const jetbrainsMono = JetBrains_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'ReviewBoost — Google Review Automation',
+  title: 'Review Booster — Google Review Automation',
   description: 'Collect Google reviews effortlessly via QR codes',
+  icons: {
+    icon: '/favicon-32.png',
+    apple: '/favicon-180.png',
+  },
+  openGraph: {
+    title: 'Review Booster',
+    description: 'Collect Google reviews effortlessly via QR codes',
+    images: ['/logo-full.png'],
+  },
 }
 
 export default function RootLayout({
