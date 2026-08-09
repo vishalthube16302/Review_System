@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { BUSINESS_CATEGORIES } from '@/lib/business-categories'
+import { Reveal } from '@/components/Reveal'
 
 export default function LandingPage() {
   return (
@@ -117,34 +118,88 @@ export default function LandingPage() {
         {/* ---------- How it works ---------- */}
         <section id="how-it-works" className="steps">
           <p className="eyebrow center">How it works</p>
-          <h2 className="section-title center">Three steps. Under thirty seconds.</h2>
+          <h2 className="section-title center">From scan to five stars</h2>
+          <p className="section-sub center">
+            Four steps, under thirty seconds &mdash; and a private safety net for anyone who
+            isn&apos;t fully happy.
+          </p>
 
           <div className="steps-grid">
-            <div className="step">
-              <span className="step-num">01</span>
-              <h3>Customer scans your QR code</h3>
-              <p>
-                Printed at your counter, table, or invoice. No app to download, no account to
-                create &mdash; it opens straight to your branded review page.
-              </p>
-            </div>
-            <div className="step">
-              <span className="step-num">02</span>
-              <h3>They rate their visit</h3>
-              <p>
-                4&ndash;5 stars: our AI writes a few short, natural review drafts they can pick
-                from. Lower ratings are quietly routed to a private feedback form instead of
-                Google &mdash; so you hear about problems before the public does.
-              </p>
-            </div>
-            <div className="step">
-              <span className="step-num">03</span>
-              <h3>One tap posts it to Google</h3>
-              <p>
-                They copy, paste, and post &mdash; on their own Google account, in their own
-                words. We never post on anyone&apos;s behalf.
-              </p>
-            </div>
+            <Reveal delay={0}>
+              <div className="step">
+                <div className="step-icon">
+                  <div className="qr qr-sm" aria-hidden="true">
+                    {Array.from({ length: 49 }).map((_, i) => (
+                      <span key={i} className={qrCell(i) ? 'on' : ''} />
+                    ))}
+                  </div>
+                </div>
+                <span className="step-num">01</span>
+                <h3>Scans your QR code</h3>
+                <p>
+                  Printed at your counter, table, or invoice. No app to download &mdash; it opens
+                  straight to your branded review page.
+                </p>
+              </div>
+            </Reveal>
+
+            <Reveal delay={120}>
+              <div className="step">
+                <div className="step-icon">
+                  <div className="stars stars-sm" aria-hidden="true">
+                    {[0, 1, 2, 3, 4].map((i) => (
+                      <span key={i}>★</span>
+                    ))}
+                  </div>
+                </div>
+                <span className="step-num">02</span>
+                <h3>Rates their visit</h3>
+                <p>One tap, five stars max &mdash; no forms, no typing required yet.</p>
+              </div>
+            </Reveal>
+
+            <Reveal delay={240}>
+              <div className="step">
+                <div className="step-icon">
+                  <div className="ai-badge" aria-hidden="true">
+                    ✨
+                  </div>
+                </div>
+                <span className="step-num">03</span>
+                <h3>AI suggests the review</h3>
+                <p>
+                  For 4&ndash;5 stars, AI writes a few short, natural drafts based on what your
+                  business actually does &mdash; never the same review twice.
+                </p>
+              </div>
+            </Reveal>
+
+            <Reveal delay={360}>
+              <div className="step step-branch">
+                <span className="step-num">04</span>
+                <h3>One of two places</h3>
+                <div className="branch">
+                  <div className="branch-path branch-good">
+                    <div className="posted posted-sm" aria-hidden="true">
+                      <span className="g">G</span>
+                      <span className="check">✓</span>
+                    </div>
+                    <p>
+                      <strong>4&ndash;5 stars</strong> &mdash; posted to Google in their own words
+                    </p>
+                  </div>
+                  <div className="branch-path branch-quiet">
+                    <div className="inbox-icon" aria-hidden="true">
+                      ✉
+                    </div>
+                    <p>
+                      <strong>1&ndash;3 stars</strong> &mdash; sent privately to your dashboard
+                      instead
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </Reveal>
           </div>
         </section>
 

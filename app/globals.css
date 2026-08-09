@@ -352,8 +352,8 @@ body {
 .landing .steps-grid {
   margin-top: 56px;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 32px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
 }
 
 .landing .step {
@@ -380,6 +380,126 @@ body {
   color: var(--muted);
   font-size: 0.95rem;
 }
+
+.landing .step-icon {
+  margin-bottom: 16px;
+}
+
+.landing .qr-sm,
+.landing .stars-sm {
+  width: 56px;
+  height: 56px;
+}
+
+.landing .stars-sm {
+  height: auto;
+  font-size: 1.1rem;
+}
+
+.landing .ai-badge {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+}
+
+.landing .posted-sm {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+}
+
+.landing .posted-sm .g {
+  width: 44px;
+  height: 44px;
+  font-size: 1rem;
+}
+
+.landing .posted-sm .check {
+  width: 18px;
+  height: 18px;
+  font-size: 0.6rem;
+  bottom: -2px;
+  right: -2px;
+  border-width: 2px;
+}
+
+.landing .inbox-icon {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  color: var(--muted);
+}
+
+.landing .step-branch {
+  display: flex;
+  flex-direction: column;
+}
+
+.landing .branch {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.landing .branch-path {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  border-radius: 12px;
+}
+
+.landing .branch-path p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.landing .branch-path strong {
+  color: var(--ink);
+}
+
+.landing .branch-good {
+  background: color-mix(in srgb, var(--accent-2) 8%, transparent);
+}
+
+.landing .branch-quiet {
+  background: var(--bg);
+}
+
+/* ---------- Scroll reveal ---------- */
+.reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
 
 /* ---------- Who it's for ---------- */
 .landing .category-grid {
@@ -491,6 +611,12 @@ body {
 @media (min-width: 720px) {
   .landing .nav-secondary {
     display: inline;
+  }
+}
+
+@media (max-width: 980px) {
+  .landing .steps-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
