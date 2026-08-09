@@ -463,6 +463,17 @@ body {
   margin-top: 28px;
 }
 
+.landing .cta-existing {
+  margin-top: 18px !important;
+  font-size: 0.85rem;
+}
+
+.landing .cta-existing-link {
+  color: white;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 /* ---------- Footer ---------- */
 .landing .footer {
   max-width: 1120px;
