@@ -169,8 +169,21 @@ body {
   color: var(--primary);
 }
 
+.landing .hero-punch {
+  margin-top: 18px;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.landing .hero-punch .dot {
+  color: var(--primary);
+  margin: 0 2px;
+  font-weight: 400;
+}
+
 .landing .hero-sub {
-  margin-top: 20px;
+  margin-top: 14px;
   font-size: 1.1rem;
   color: var(--muted);
   max-width: 560px;

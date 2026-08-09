@@ -37,6 +37,10 @@ export default function LandingPage() {
               <br />
               into a <span className="hl">5-star Google review</span>
             </h1>
+            <p className="hero-punch">
+              No typing. <span className="dot">&bull;</span> No guessing what to write.{' '}
+              <span className="dot">&bull;</span> No bad reviews going public.
+            </p>
             <p className="hero-sub">
               One QR code. One tap. A short, honest, AI-written review your customers actually
               want to post &mdash; and a private channel to catch unhappy ones before they ever
