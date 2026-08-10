@@ -1,18 +1,25 @@
 /**
- * Builds a printable "Google Review" QR sticker as a PNG data URL:
- *  - a colourful "Google" wordmark at the top
- *  - a 5-star row underneath it
- *  - the QR code framed in the middle, in the business's brand color
- *  - the business name below
+ * Two distinct printable poster types:
  *
- * Runs entirely in the browser via Canvas - no server round trip needed,
- * matching the existing client-side QR generation.
+ *  - generateQRPoster: the AI-powered flow. Scanning it lands on our own
+ *    review page, where AI drafts a short review for the customer to copy
+ *    and post. Shows the business's own logo + name at the top, a
+ *    "We value your feedback" banner, and a row of trust badges - built to
+ *    look good standing on a counter, not just functional.
+ *
+ *  - generateDirectGooglePoster: no AI, no middle page. The QR encodes
+ *    Google's own "write a review" link directly, so scanning it opens
+ *    Google immediately. Visually distinct on purpose (blue/white, Google
+ *    logo front and center) so nobody mixes up which stand is which.
+ *
+ * Both run entirely in the browser via Canvas.
  */
 
 interface PosterOptions {
   qrDataUrl: string
   businessName: string
   brandColor?: string // hex without '#', e.g. '4F46E5'
+  logoUrl?: string | null
 }
 
 const GOOGLE_COLORS = ['#4285F4', '#EA4335', '#FBBC05', '#4285F4', '#34A853', '#EA4335']
@@ -20,6 +27,7 @@ const GOOGLE_COLORS = ['#4285F4', '#EA4335', '#FBBC05', '#4285F4', '#34A853', '#
 function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image()
+    img.crossOrigin = 'anonymous'
     img.onload = () => resolve(img)
     img.onerror = reject
     img.src = src
@@ -53,13 +61,13 @@ function drawStar(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: numb
     else ctx.lineTo(x, y)
   }
   ctx.closePath()
-  ctx.fillStyle = '#FBBC05'
+  ctx.fillStyle = '#F5A623'
   ctx.fill()
 }
 
-function drawGoogleWordmark(ctx: CanvasRenderingContext2D, centerX: number, y: number) {
+function drawGoogleWordmark(ctx: CanvasRenderingContext2D, centerX: number, y: number, fontSize = 54) {
   const word = 'Google'
-  ctx.font = '700 54px Arial, sans-serif'
+  ctx.font = `700 ${fontSize}px Arial, sans-serif`
   const letterWidths = word.split('').map((ch) => ctx.measureText(ch).width)
   const totalWidth = letterWidths.reduce((a, b) => a + b, 0)
   let cursorX = centerX - totalWidth / 2
@@ -72,105 +80,6 @@ function drawGoogleWordmark(ctx: CanvasRenderingContext2D, centerX: number, y: n
   ctx.textAlign = 'center'
 }
 
-export async function generateQRPoster({
-  qrDataUrl,
-  businessName,
-  brandColor = '4F46E5',
-}: PosterOptions): Promise<string> {
-  const width = 600
-  const height = 850
-  const canvas = document.createElement('canvas')
-  canvas.width = width
-  canvas.height = height
-  const ctx = canvas.getContext('2d')
-  if (!ctx) throw new Error('Canvas not supported')
-
-  const brand = `#${brandColor}`
-
-  // Soft light background so the colourful wordmark and gold stars pop,
-  // sticker-style, with a thin brand-color border.
-  ctx.fillStyle = '#ffffff'
-  ctx.fillRect(0, 0, width, height)
-  ctx.strokeStyle = brand
-  ctx.lineWidth = 10
-  drawRoundedRect(ctx, 5, 5, width - 10, height - 10, 32)
-  ctx.stroke()
-
-  // Brand-color header band.
-  ctx.save()
-  drawRoundedRect(ctx, 5, 5, width - 10, 130, 32)
-  ctx.clip()
-  ctx.fillStyle = brand
-  ctx.fillRect(5, 5, width - 10, 130)
-  ctx.restore()
-
-  ctx.textAlign = 'center'
-  ctx.fillStyle = '#ffffff'
-  ctx.font = '600 24px Arial, sans-serif'
-  ctx.fillText('SCAN TO LEAVE US A REVIEW ON', width / 2, 90)
-
-  // Colourful Google wordmark, just below the header band.
-  drawGoogleWordmark(ctx, width / 2, 220)
-
-  // 5-star row underneath the wordmark.
-  const starY = 270
-  const starSpacing = 46
-  const starsStartX = width / 2 - starSpacing * 2
-  for (let i = 0; i < 5; i++) {
-    drawStar(ctx, starsStartX + i * starSpacing, starY, 19)
-  }
-
-  // QR code, framed in the brand color, centered.
-  const qrImg = await loadImage(qrDataUrl)
-  const qrSize = 340
-  const qrX = width / 2 - qrSize / 2
-  const qrY = starY + 50
-  ctx.save()
-  ctx.strokeStyle = brand
-  ctx.lineWidth = 6
-  drawRoundedRect(ctx, qrX - 16, qrY - 16, qrSize + 32, qrSize + 32, 20)
-  ctx.stroke()
-  ctx.fillStyle = '#ffffff'
-  drawRoundedRect(ctx, qrX - 10, qrY - 10, qrSize + 20, qrSize + 20, 16)
-  ctx.fill()
-  ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize)
-  ctx.restore()
-
-  // Business name below the QR code.
-  ctx.fillStyle = '#0f172a'
-  ctx.font = '700 28px Arial, sans-serif'
-  const nameY = qrY + qrSize + 55
-  ctx.fillText(truncate(ctx, businessName, width - 80), width / 2, nameY)
-
-  // Helper caption.
-  ctx.fillStyle = '#64748b'
-  ctx.font = '400 18px Arial, sans-serif'
-  ctx.fillText('Open your camera and point at the code', width / 2, nameY + 32)
-
-  // Footer branding - small icon + text, centered together.
-  ctx.font = '500 14px Arial, sans-serif'
-  const footerText = 'Powered by Review Booster'
-  const footerTextWidth = ctx.measureText(footerText).width
-  const footerIconSize = 18
-  const footerGap = 6
-  const footerGroupWidth = footerIconSize + footerGap + footerTextWidth
-  const footerY = height - 34
-  const footerIconX = width / 2 - footerGroupWidth / 2
-  try {
-    const logoIcon = await loadImage('/logo-icon.png')
-    ctx.drawImage(logoIcon, footerIconX, footerY, footerIconSize, footerIconSize)
-  } catch {
-    // Non-critical - if the icon fails to load (e.g. offline), the text
-    // alone still communicates the branding.
-  }
-  ctx.fillStyle = '#94a3b8'
-  ctx.textAlign = 'left'
-  ctx.fillText(footerText, footerIconX + footerIconSize + footerGap, footerY + footerIconSize - 4)
-  ctx.textAlign = 'center'
-
-  return canvas.toDataURL('image/png')
-}
-
 function truncate(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string {
   if (ctx.measureText(text).width <= maxWidth) return text
   let result = text
@@ -178,4 +87,273 @@ function truncate(ctx: CanvasRenderingContext2D, text: string, maxWidth: number)
     result = result.slice(0, -1)
   }
   return result + '…'
+}
+
+// Draws the QR code with a small circular logo watermark centered on top.
+// Safe because both QR generators use errorCorrectionLevel 'H', which
+// tolerates roughly 30% obstruction - a small centered logo is well within
+// that margin.
+async function drawQRWithWatermark(
+  ctx: CanvasRenderingContext2D,
+  qrDataUrl: string,
+  x: number,
+  y: number,
+  size: number,
+  logoUrl?: string | null
+) {
+  const qrImg = await loadImage(qrDataUrl)
+  ctx.drawImage(qrImg, x, y, size, size)
+
+  if (!logoUrl) return
+  try {
+    const logo = await loadImage(logoUrl)
+    const badge = size * 0.22
+    const cx = x + size / 2
+    const cy = y + size / 2
+    ctx.save()
+    ctx.fillStyle = '#ffffff'
+    ctx.beginPath()
+    ctx.arc(cx, cy, badge / 2 + 6, 0, Math.PI * 2)
+    ctx.fill()
+    ctx.beginPath()
+    ctx.arc(cx, cy, badge / 2, 0, Math.PI * 2)
+    ctx.clip()
+    ctx.drawImage(logo, cx - badge / 2, cy - badge / 2, badge, badge)
+    ctx.restore()
+  } catch {
+    // Logo failed to load (broken URL, offline) - QR code alone still works.
+  }
+}
+
+/**
+ * AI-powered "Scan to Review" poster: business branding at the top, a
+ * feedback banner, Google + stars, the QR code (watermarked with the
+ * business's own logo if they have one), a row of trust badges, and a
+ * thank-you footer banner.
+ */
+export async function generateQRPoster({
+  qrDataUrl,
+  businessName,
+  brandColor = '4F46E5',
+  logoUrl,
+}: PosterOptions): Promise<string> {
+  const width = 640
+  const height = 1210
+  const canvas = document.createElement('canvas')
+  canvas.width = width
+  canvas.height = height
+  const ctx = canvas.getContext('2d')
+  if (!ctx) throw new Error('Canvas not supported')
+  const brand = `#${brandColor}`
+
+  ctx.fillStyle = '#ffffff'
+  ctx.fillRect(0, 0, width, height)
+  ctx.textAlign = 'center'
+
+  let y = 0
+
+  // Top decorative band.
+  ctx.fillStyle = brand
+  drawRoundedRect(ctx, 0, 0, width, 64, 0)
+  ctx.fill()
+  ctx.beginPath()
+  ctx.ellipse(width / 2, 64, width * 0.55, 30, 0, 0, Math.PI * 2)
+  ctx.fillStyle = '#ffffff'
+  ctx.fill()
+  y = 96
+
+  // Business logo, if they have one.
+  if (logoUrl) {
+    try {
+      const logo = await loadImage(logoUrl)
+      const logoSize = 100
+      ctx.save()
+      drawRoundedRect(ctx, width / 2 - logoSize / 2, y, logoSize, logoSize, 16)
+      ctx.clip()
+      ctx.fillStyle = '#ffffff'
+      ctx.fillRect(width / 2 - logoSize / 2, y, logoSize, logoSize)
+      ctx.drawImage(logo, width / 2 - logoSize / 2, y, logoSize, logoSize)
+      ctx.restore()
+      y += logoSize + 20
+    } catch {
+      // Skip the logo slot entirely if it fails to load.
+    }
+  } else {
+    y += 20
+  }
+
+  // Business name.
+  ctx.fillStyle = '#0f172a'
+  ctx.font = '700 30px Arial, sans-serif'
+  ctx.fillText(truncate(ctx, businessName, width - 80), width / 2, y)
+  y += 56
+
+  // "We value your feedback" banner.
+  const bannerH = 130
+  ctx.fillStyle = brand
+  drawRoundedRect(ctx, 40, y, width - 80, bannerH, 24)
+  ctx.fill()
+  ctx.fillStyle = '#ffffff'
+  ctx.font = 'italic 700 30px Georgia, serif'
+  ctx.fillText('We Value Your Feedback!', width / 2, y + 52)
+  ctx.font = '400 17px Arial, sans-serif'
+  ctx.fillStyle = 'rgba(255,255,255,0.92)'
+  ctx.fillText('Your review helps us serve you better.', width / 2, y + 92)
+  y += bannerH + 44
+
+  // "Scan to leave us a review on Google" + stars.
+  ctx.fillStyle = '#0f172a'
+  ctx.font = '700 20px Arial, sans-serif'
+  ctx.fillText('SCAN TO LEAVE US A REVIEW ON', width / 2, y)
+  y += 54
+  drawGoogleWordmark(ctx, width / 2, y, 50)
+  y += 46
+  const starSpacing = 42
+  const starsStartX = width / 2 - starSpacing * 2
+  for (let i = 0; i < 5; i++) {
+    drawStar(ctx, starsStartX + i * starSpacing, y, 17)
+  }
+  y += 56
+
+  // QR code, framed, with the business's logo watermarked in the center.
+  const qrSize = 300
+  const qrX = width / 2 - qrSize / 2
+  ctx.save()
+  ctx.strokeStyle = brand
+  ctx.lineWidth = 5
+  drawRoundedRect(ctx, qrX - 14, y - 14, qrSize + 28, qrSize + 28, 18)
+  ctx.stroke()
+  ctx.restore()
+  await drawQRWithWatermark(ctx, qrDataUrl, qrX, y, qrSize, logoUrl)
+  y += qrSize + 50
+
+  // Trust badges row.
+  const badges = [
+    { icon: '🛡️', label: 'Trusted Quality' },
+    { icon: '⚙️', label: 'Reliable Service' },
+    { icon: '🤝', label: 'Customer First' },
+    { icon: '🙏', label: 'Thank You!' },
+  ]
+  const badgeSpacing = width / badges.length
+  badges.forEach((b, i) => {
+    const cx = badgeSpacing * i + badgeSpacing / 2
+    ctx.font = '28px Arial, sans-serif'
+    ctx.fillText(b.icon, cx, y)
+    ctx.font = '600 13px Arial, sans-serif'
+    ctx.fillStyle = '#334155'
+    const words = b.label.split(' ')
+    ctx.fillText(words.slice(0, -1).join(' '), cx, y + 24)
+    ctx.fillText(words.slice(-1).join(' '), cx, y + 42)
+  })
+  y += 82
+
+  // Small platform branding, sitting in the white space above the footer
+  // banner - subtle on purpose, this poster is about the business, not us.
+  ctx.fillStyle = '#cbd5e1'
+  ctx.font = '500 12px Arial, sans-serif'
+  ctx.fillText('Powered by Review Booster', width / 2, y + 14)
+
+  // Bottom thank-you banner.
+  const footerH = 90
+  ctx.fillStyle = brand
+  ctx.beginPath()
+  ctx.ellipse(width / 2, height - footerH, width * 0.55, 30, 0, 0, Math.PI * 2)
+  ctx.fill()
+  drawRoundedRect(ctx, 0, height - footerH, width, footerH, 0)
+  ctx.fill()
+  ctx.fillStyle = '#ffffff'
+  ctx.font = 'italic 400 19px Georgia, serif'
+  ctx.fillText('Thank you for being', width / 2, height - 54)
+  ctx.fillText('a part of our journey!', width / 2, height - 26)
+
+  return canvas.toDataURL('image/png')
+}/**
+ * Direct-to-Google poster: no AI, no middle page - the QR encodes Google's
+ * review URL directly. Deliberately simpler and Google-blue instead of the
+ * business's brand color, so it's visually obvious this is a different
+ * stand from the AI-powered one.
+ */
+export async function generateDirectGooglePoster({
+  qrDataUrl,
+  businessName,
+  logoUrl,
+}: PosterOptions): Promise<string> {
+  const width = 640
+  const height = 1010
+  const canvas = document.createElement('canvas')
+  canvas.width = width
+  canvas.height = height
+  const ctx = canvas.getContext('2d')
+  if (!ctx) throw new Error('Canvas not supported')
+
+  ctx.fillStyle = '#ffffff'
+  ctx.fillRect(0, 0, width, height)
+  ctx.strokeStyle = '#4285F4'
+  ctx.lineWidth = 8
+  drawRoundedRect(ctx, 4, 4, width - 8, height - 8, 28)
+  ctx.stroke()
+  ctx.textAlign = 'center'
+
+  let y = 100
+
+  if (logoUrl) {
+    try {
+      const logo = await loadImage(logoUrl)
+      const logoSize = 84
+      ctx.save()
+      drawRoundedRect(ctx, width / 2 - logoSize / 2, y - logoSize, logoSize, logoSize, 14)
+      ctx.clip()
+      ctx.fillStyle = '#ffffff'
+      ctx.fillRect(width / 2 - logoSize / 2, y - logoSize, logoSize, logoSize)
+      ctx.drawImage(logo, width / 2 - logoSize / 2, y - logoSize, logoSize, logoSize)
+      ctx.restore()
+      y += 20
+    } catch {
+      // Skip if it fails to load.
+    }
+  }
+
+  ctx.fillStyle = '#0f172a'
+  ctx.font = '700 26px Arial, sans-serif'
+  ctx.fillText(truncate(ctx, businessName, width - 80), width / 2, y)
+  y += 70
+
+  ctx.font = '600 22px Arial, sans-serif'
+  ctx.fillStyle = '#475569'
+  ctx.fillText('Scan to leave us a review on', width / 2, y)
+  y += 66
+  drawGoogleWordmark(ctx, width / 2, y, 60)
+  y += 50
+
+  const starSpacing = 44
+  const starsStartX = width / 2 - starSpacing * 2
+  for (let i = 0; i < 5; i++) {
+    drawStar(ctx, starsStartX + i * starSpacing, y, 18)
+  }
+  y += 60
+
+  const qrSize = 330
+  const qrX = width / 2 - qrSize / 2
+  ctx.save()
+  ctx.strokeStyle = '#4285F4'
+  ctx.lineWidth = 5
+  drawRoundedRect(ctx, qrX - 14, y - 14, qrSize + 28, qrSize + 28, 18)
+  ctx.stroke()
+  ctx.restore()
+  await drawQRWithWatermark(ctx, qrDataUrl, qrX, y, qrSize, logoUrl)
+  y += qrSize + 46
+
+  ctx.fillStyle = '#64748b'
+  ctx.font = '400 16px Arial, sans-serif'
+  ctx.fillText('Opens Google Reviews instantly - no extra steps', width / 2, y)
+  y += 40
+
+  ctx.fillStyle = '#94a3b8'
+  ctx.font = '500 14px Arial, sans-serif'
+  ctx.fillText('Powered by Google', width / 2, height - 40)
+  ctx.fillStyle = '#cbd5e1'
+  ctx.font = '500 12px Arial, sans-serif'
+  ctx.fillText('via Review Booster', width / 2, height - 18)
+
+  return canvas.toDataURL('image/png')
 }

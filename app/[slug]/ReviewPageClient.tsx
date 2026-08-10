@@ -186,7 +186,7 @@ export default function ReviewPageClient({
         <div className="w-full max-w-md space-y-3 mb-6">
           <div className="flex items-center justify-between">
             <p className="text-sm text-slate-500 font-medium">
-              {loadingReviews ? 'Personalizing your review...' : 'Select your review:'}
+              {loadingReviews ? 'Personalizing your review...' : 'Tap a review to select it:'}
             </p>
             {debugMode && reviewSource && (
               <span
@@ -254,7 +254,7 @@ export default function ReviewPageClient({
           className="w-full max-w-md py-4 rounded-xl font-bold text-lg hover:opacity-90 active:scale-95 transition-all shadow-lg disabled:opacity-50"
           style={{ backgroundColor: `var(--brand)`, color: 'white' }}
         >
-          {submitting ? 'Submitting...' : 'Post to Google ✓'}
+          {submitting ? 'Copying...' : 'Copy Review & Post on Google'}
         </button>
       )}
 
