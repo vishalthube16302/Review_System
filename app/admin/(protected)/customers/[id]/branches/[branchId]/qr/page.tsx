@@ -96,7 +96,7 @@ export default function QRPage({
   }
 
   return (
-    <div className="max-w-sm mx-auto text-center py-10">
+    <div className="max-w-sm mx-auto text-center py-10 px-4">
       <h1 className="text-xl font-bold mb-2">{business?.business_name}</h1>
       <p className="text-slate-500 text-sm mb-6">{business?.location}</p>
 

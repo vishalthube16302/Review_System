@@ -23,6 +23,46 @@ interface PosterOptions {
 }
 
 const GOOGLE_COLORS = ['#4285F4', '#EA4335', '#FBBC05', '#4285F4', '#34A853', '#EA4335']
+const HEADING_FONT = 'Poppins'
+const SCRIPT_FONT = 'Playfair Display'
+
+// Loads the two web fonts used across both posters (a clean geometric sans
+// for headings/labels, an elegant serif italic for the banner lines) once
+// per page load, so posters look designed rather than default-Arial. Canvas
+// text only picks up a font once the browser has actually loaded it, so we
+// inject the stylesheet and explicitly wait via document.fonts.load() for
+// every weight/size combination used below before any drawing happens.
+let fontsReady: Promise<void> | null = null
+
+function ensureFonts(): Promise<void> {
+  if (fontsReady) return fontsReady
+  fontsReady = (async () => {
+    if (typeof document === 'undefined') return
+    if (!document.querySelector('link[data-qr-poster-fonts]')) {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href =
+        'https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@1,600;1,700&display=swap'
+      link.setAttribute('data-qr-poster-fonts', 'true')
+      document.head.appendChild(link)
+    }
+    try {
+      await Promise.all([
+        document.fonts.load(`800 30px "${HEADING_FONT}"`),
+        document.fonts.load(`700 30px "${HEADING_FONT}"`),
+        document.fonts.load(`600 20px "${HEADING_FONT}"`),
+        document.fonts.load(`500 14px "${HEADING_FONT}"`),
+        document.fonts.load(`400 16px "${HEADING_FONT}"`),
+        document.fonts.load(`italic 700 30px "${SCRIPT_FONT}"`),
+        document.fonts.load(`italic 600 19px "${SCRIPT_FONT}"`),
+      ])
+    } catch {
+      // If the fonts fail to load (offline, network blocked), canvas falls
+      // back to the default sans-serif gracefully - plainer, not broken.
+    }
+  })()
+  return fontsReady
+}
 
 function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
@@ -67,7 +107,7 @@ function drawStar(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: numb
 
 function drawGoogleWordmark(ctx: CanvasRenderingContext2D, centerX: number, y: number, fontSize = 54) {
   const word = 'Google'
-  ctx.font = `700 ${fontSize}px Arial, sans-serif`
+  ctx.font = `700 ${fontSize}px "${HEADING_FONT}", Arial, sans-serif`
   const letterWidths = word.split('').map((ch) => ctx.measureText(ch).width)
   const totalWidth = letterWidths.reduce((a, b) => a + b, 0)
   let cursorX = centerX - totalWidth / 2
@@ -87,6 +127,80 @@ function truncate(ctx: CanvasRenderingContext2D, text: string, maxWidth: number)
     result = result.slice(0, -1)
   }
   return result + '…'
+}
+
+// --- Trust badge icons -----------------------------------------------------
+// Simple line-drawn icons in a single consistent color, instead of mixed
+// colorful emoji (which render inconsistently across devices and clash with
+// the flat, designed look of the rest of the poster).
+
+function drawShieldCheck(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: number, color: string) {
+  ctx.save()
+  ctx.strokeStyle = color
+  ctx.lineWidth = 2.2
+  ctx.lineJoin = 'round'
+  ctx.lineCap = 'round'
+  ctx.beginPath()
+  ctx.moveTo(cx, cy - r)
+  ctx.lineTo(cx + r * 0.85, cy - r * 0.55)
+  ctx.lineTo(cx + r * 0.85, cy + r * 0.15)
+  ctx.quadraticCurveTo(cx + r * 0.85, cy + r * 0.85, cx, cy + r)
+  ctx.quadraticCurveTo(cx - r * 0.85, cy + r * 0.85, cx - r * 0.85, cy + r * 0.15)
+  ctx.lineTo(cx - r * 0.85, cy - r * 0.55)
+  ctx.closePath()
+  ctx.stroke()
+  ctx.beginPath()
+  ctx.moveTo(cx - r * 0.32, cy)
+  ctx.lineTo(cx - r * 0.05, cy + r * 0.3)
+  ctx.lineTo(cx + r * 0.4, cy - r * 0.25)
+  ctx.stroke()
+  ctx.restore()
+}
+
+function drawReliabilityArrow(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: number, color: string) {
+  ctx.save()
+  ctx.strokeStyle = color
+  ctx.lineWidth = 2.2
+  ctx.lineCap = 'round'
+  ctx.beginPath()
+  ctx.arc(cx, cy, r * 0.75, -Math.PI * 0.65, Math.PI * 0.95)
+  ctx.stroke()
+  const headAngle = Math.PI * 0.95
+  const hx = cx + r * 0.75 * Math.cos(headAngle)
+  const hy = cy + r * 0.75 * Math.sin(headAngle)
+  ctx.beginPath()
+  ctx.moveTo(hx, hy)
+  ctx.lineTo(hx - r * 0.28, hy - r * 0.05)
+  ctx.moveTo(hx, hy)
+  ctx.lineTo(hx - r * 0.1, hy + r * 0.28)
+  ctx.stroke()
+  ctx.restore()
+}
+
+function drawHeart(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: number, color: string) {
+  ctx.save()
+  ctx.fillStyle = color
+  ctx.beginPath()
+  const topY = cy - r * 0.35
+  ctx.moveTo(cx, cy + r * 0.7)
+  ctx.bezierCurveTo(cx - r * 1.1, cy - r * 0.15, cx - r * 0.5, topY - r * 0.7, cx, cy - r * 0.15)
+  ctx.bezierCurveTo(cx + r * 0.5, topY - r * 0.7, cx + r * 1.1, cy - r * 0.15, cx, cy + r * 0.7)
+  ctx.closePath()
+  ctx.fill()
+  ctx.restore()
+}
+
+function drawBadgeIcon(
+  ctx: CanvasRenderingContext2D,
+  kind: 'shield' | 'reliable' | 'heart' | 'star',
+  cx: number,
+  cy: number,
+  color: string
+) {
+  if (kind === 'shield') drawShieldCheck(ctx, cx, cy, 15, color)
+  else if (kind === 'reliable') drawReliabilityArrow(ctx, cx, cy, 15, color)
+  else if (kind === 'heart') drawHeart(ctx, cx, cy, 12, color)
+  else drawStar(ctx, cx, cy, 14)
 }
 
 // Draws the QR code with a small circular logo watermark centered on top.
@@ -137,8 +251,10 @@ export async function generateQRPoster({
   brandColor = '4F46E5',
   logoUrl,
 }: PosterOptions): Promise<string> {
+  await ensureFonts()
+
   const width = 640
-  const height = 1210
+  const height = 1200
   const canvas = document.createElement('canvas')
   canvas.width = width
   canvas.height = height
@@ -154,8 +270,7 @@ export async function generateQRPoster({
 
   // Top decorative band.
   ctx.fillStyle = brand
-  drawRoundedRect(ctx, 0, 0, width, 64, 0)
-  ctx.fill()
+  ctx.fillRect(0, 0, width, 64)
   ctx.beginPath()
   ctx.ellipse(width / 2, 64, width * 0.55, 30, 0, 0, Math.PI * 2)
   ctx.fillStyle = '#ffffff'
@@ -174,19 +289,20 @@ export async function generateQRPoster({
       ctx.fillRect(width / 2 - logoSize / 2, y, logoSize, logoSize)
       ctx.drawImage(logo, width / 2 - logoSize / 2, y, logoSize, logoSize)
       ctx.restore()
-      y += logoSize + 20
+      y += logoSize + 24
     } catch {
       // Skip the logo slot entirely if it fails to load.
+      y += 12
     }
   } else {
-    y += 20
+    y += 12
   }
 
   // Business name.
   ctx.fillStyle = '#0f172a'
-  ctx.font = '700 30px Arial, sans-serif'
+  ctx.font = `700 30px "${HEADING_FONT}", Arial, sans-serif`
   ctx.fillText(truncate(ctx, businessName, width - 80), width / 2, y)
-  y += 56
+  y += 52
 
   // "We value your feedback" banner.
   const bannerH = 130
@@ -194,18 +310,18 @@ export async function generateQRPoster({
   drawRoundedRect(ctx, 40, y, width - 80, bannerH, 24)
   ctx.fill()
   ctx.fillStyle = '#ffffff'
-  ctx.font = 'italic 700 30px Georgia, serif'
-  ctx.fillText('We Value Your Feedback!', width / 2, y + 52)
-  ctx.font = '400 17px Arial, sans-serif'
+  ctx.font = `italic 700 30px "${SCRIPT_FONT}", Georgia, serif`
+  ctx.fillText('We Value Your Feedback!', width / 2, y + 54)
+  ctx.font = `400 17px "${HEADING_FONT}", Arial, sans-serif`
   ctx.fillStyle = 'rgba(255,255,255,0.92)'
   ctx.fillText('Your review helps us serve you better.', width / 2, y + 92)
-  y += bannerH + 44
+  y += bannerH + 46
 
   // "Scan to leave us a review on Google" + stars.
   ctx.fillStyle = '#0f172a'
-  ctx.font = '700 20px Arial, sans-serif'
+  ctx.font = `600 19px "${HEADING_FONT}", Arial, sans-serif`
   ctx.fillText('SCAN TO LEAVE US A REVIEW ON', width / 2, y)
-  y += 54
+  y += 56
   drawGoogleWordmark(ctx, width / 2, y, 50)
   y += 46
   const starSpacing = 42
@@ -225,33 +341,37 @@ export async function generateQRPoster({
   ctx.stroke()
   ctx.restore()
   await drawQRWithWatermark(ctx, qrDataUrl, qrX, y, qrSize, logoUrl)
-  y += qrSize + 50
+  y += qrSize + 56
 
-  // Trust badges row.
-  const badges = [
-    { icon: '🛡️', label: 'Trusted Quality' },
-    { icon: '⚙️', label: 'Reliable Service' },
-    { icon: '🤝', label: 'Customer First' },
-    { icon: '🙏', label: 'Thank You!' },
+  // Trust badges row - consistent line-icon style, brand-tinted circles.
+  const badges: { kind: 'shield' | 'reliable' | 'heart' | 'star'; label: string }[] = [
+    { kind: 'shield', label: 'Trusted Quality' },
+    { kind: 'reliable', label: 'Reliable Service' },
+    { kind: 'heart', label: 'Customer First' },
+    { kind: 'star', label: 'Thank You!' },
   ]
   const badgeSpacing = width / badges.length
+  const badgeCircleR = 24
   badges.forEach((b, i) => {
     const cx = badgeSpacing * i + badgeSpacing / 2
-    ctx.font = '28px Arial, sans-serif'
-    ctx.fillText(b.icon, cx, y)
-    ctx.font = '600 13px Arial, sans-serif'
+    ctx.beginPath()
+    ctx.arc(cx, y, badgeCircleR, 0, Math.PI * 2)
+    ctx.fillStyle = `${brand}15`
+    ctx.fill()
+    drawBadgeIcon(ctx, b.kind, cx, y, brand)
+    ctx.font = `600 12.5px "${HEADING_FONT}", Arial, sans-serif`
     ctx.fillStyle = '#334155'
     const words = b.label.split(' ')
-    ctx.fillText(words.slice(0, -1).join(' '), cx, y + 24)
-    ctx.fillText(words.slice(-1).join(' '), cx, y + 42)
+    ctx.fillText(words.slice(0, -1).join(' '), cx, y + badgeCircleR + 20)
+    ctx.fillText(words.slice(-1).join(' '), cx, y + badgeCircleR + 36)
   })
-  y += 82
+  y += badgeCircleR + 68
 
   // Small platform branding, sitting in the white space above the footer
   // banner - subtle on purpose, this poster is about the business, not us.
   ctx.fillStyle = '#cbd5e1'
-  ctx.font = '500 12px Arial, sans-serif'
-  ctx.fillText('Powered by Review Booster', width / 2, y + 14)
+  ctx.font = `500 12px "${HEADING_FONT}", Arial, sans-serif`
+  ctx.fillText('Powered by Review Booster', width / 2, y)
 
   // Bottom thank-you banner.
   const footerH = 90
@@ -259,27 +379,57 @@ export async function generateQRPoster({
   ctx.beginPath()
   ctx.ellipse(width / 2, height - footerH, width * 0.55, 30, 0, 0, Math.PI * 2)
   ctx.fill()
-  drawRoundedRect(ctx, 0, height - footerH, width, footerH, 0)
-  ctx.fill()
+  ctx.fillRect(0, height - footerH, width, footerH)
   ctx.fillStyle = '#ffffff'
-  ctx.font = 'italic 400 19px Georgia, serif'
+  ctx.font = `italic 600 19px "${SCRIPT_FONT}", Georgia, serif`
   ctx.fillText('Thank you for being', width / 2, height - 54)
   ctx.fillText('a part of our journey!', width / 2, height - 26)
 
   return canvas.toDataURL('image/png')
-}/**
+}
+
+/**
  * Direct-to-Google poster: no AI, no middle page - the QR encodes Google's
  * review URL directly. Deliberately simpler and Google-blue instead of the
  * business's brand color, so it's visually obvious this is a different
  * stand from the AI-powered one.
+ *
+ * Height is computed from the same fixed layout constants used to draw the
+ * content (not a guessed fixed number), so the footer always sits close to
+ * the QR code instead of floating in empty space below it.
  */
 export async function generateDirectGooglePoster({
   qrDataUrl,
   businessName,
   logoUrl,
 }: PosterOptions): Promise<string> {
+  await ensureFonts()
+
   const width = 640
-  const height = 1010
+  const topMargin = 100
+  const logoBlockH = logoUrl ? 20 : 0 // extra offset the logo adds before content starts
+  const nameH = 70
+  const scanTextH = 66
+  const googleH = 50
+  const starsH = 60
+  const qrSize = 330
+  const qrBlockH = qrSize + 46
+  const captionH = 50
+  const footerH = 70
+  const bottomPadding = 30
+
+  const height =
+    topMargin +
+    logoBlockH +
+    nameH +
+    scanTextH +
+    googleH +
+    starsH +
+    qrBlockH +
+    captionH +
+    footerH +
+    bottomPadding
+
   const canvas = document.createElement('canvas')
   canvas.width = width
   canvas.height = height
@@ -294,7 +444,7 @@ export async function generateDirectGooglePoster({
   ctx.stroke()
   ctx.textAlign = 'center'
 
-  let y = 100
+  let y = topMargin
 
   if (logoUrl) {
     try {
@@ -307,32 +457,33 @@ export async function generateDirectGooglePoster({
       ctx.fillRect(width / 2 - logoSize / 2, y - logoSize, logoSize, logoSize)
       ctx.drawImage(logo, width / 2 - logoSize / 2, y - logoSize, logoSize, logoSize)
       ctx.restore()
-      y += 20
+      y += logoBlockH
     } catch {
-      // Skip if it fails to load.
+      // Skip if it fails to load - the reserved logoBlockH space still
+      // applies so layout math above stays accurate either way.
+      y += logoBlockH
     }
   }
 
   ctx.fillStyle = '#0f172a'
-  ctx.font = '700 26px Arial, sans-serif'
+  ctx.font = `700 26px "${HEADING_FONT}", Arial, sans-serif`
   ctx.fillText(truncate(ctx, businessName, width - 80), width / 2, y)
-  y += 70
+  y += nameH
 
-  ctx.font = '600 22px Arial, sans-serif'
+  ctx.font = `600 22px "${HEADING_FONT}", Arial, sans-serif`
   ctx.fillStyle = '#475569'
   ctx.fillText('Scan to leave us a review on', width / 2, y)
-  y += 66
+  y += scanTextH
   drawGoogleWordmark(ctx, width / 2, y, 60)
-  y += 50
+  y += googleH
 
   const starSpacing = 44
   const starsStartX = width / 2 - starSpacing * 2
   for (let i = 0; i < 5; i++) {
     drawStar(ctx, starsStartX + i * starSpacing, y, 18)
   }
-  y += 60
+  y += starsH
 
-  const qrSize = 330
   const qrX = width / 2 - qrSize / 2
   ctx.save()
   ctx.strokeStyle = '#4285F4'
@@ -341,19 +492,20 @@ export async function generateDirectGooglePoster({
   ctx.stroke()
   ctx.restore()
   await drawQRWithWatermark(ctx, qrDataUrl, qrX, y, qrSize, logoUrl)
-  y += qrSize + 46
+  y += qrBlockH
 
   ctx.fillStyle = '#64748b'
-  ctx.font = '400 16px Arial, sans-serif'
+  ctx.font = `400 16px "${HEADING_FONT}", Arial, sans-serif`
   ctx.fillText('Opens Google Reviews instantly - no extra steps', width / 2, y)
-  y += 40
+  y += captionH
 
   ctx.fillStyle = '#94a3b8'
-  ctx.font = '500 14px Arial, sans-serif'
-  ctx.fillText('Powered by Google', width / 2, height - 40)
+  ctx.font = `500 14px "${HEADING_FONT}", Arial, sans-serif`
+  ctx.fillText('Powered by Google', width / 2, y)
+  y += 22
   ctx.fillStyle = '#cbd5e1'
-  ctx.font = '500 12px Arial, sans-serif'
-  ctx.fillText('via Review Booster', width / 2, height - 18)
+  ctx.font = `500 12px "${HEADING_FONT}", Arial, sans-serif`
+  ctx.fillText('via Review Booster', width / 2, y)
 
   return canvas.toDataURL('image/png')
 }
