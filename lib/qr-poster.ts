@@ -4,8 +4,7 @@
  *  - generateQRPoster: the AI-powered flow. Scanning it lands on our own
  *    review page, where AI drafts a short review for the customer to copy
  *    and post. Shows the business's own logo + name at the top, a
- *    "We value your feedback" banner, and a row of trust badges - built to
- *    look good standing on a counter, not just functional.
+ *    "We value your feedback" banner - built to look good standing on a counter, not just functional.
  *
  *  - generateDirectGooglePoster: no AI, no middle page. The QR encodes
  *    Google's own "write a review" link directly, so scanning it opens
@@ -129,80 +128,6 @@ function truncate(ctx: CanvasRenderingContext2D, text: string, maxWidth: number)
   return result + '…'
 }
 
-// --- Trust badge icons -----------------------------------------------------
-// Simple line-drawn icons in a single consistent color, instead of mixed
-// colorful emoji (which render inconsistently across devices and clash with
-// the flat, designed look of the rest of the poster).
-
-function drawShieldCheck(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: number, color: string) {
-  ctx.save()
-  ctx.strokeStyle = color
-  ctx.lineWidth = 2.2
-  ctx.lineJoin = 'round'
-  ctx.lineCap = 'round'
-  ctx.beginPath()
-  ctx.moveTo(cx, cy - r)
-  ctx.lineTo(cx + r * 0.85, cy - r * 0.55)
-  ctx.lineTo(cx + r * 0.85, cy + r * 0.15)
-  ctx.quadraticCurveTo(cx + r * 0.85, cy + r * 0.85, cx, cy + r)
-  ctx.quadraticCurveTo(cx - r * 0.85, cy + r * 0.85, cx - r * 0.85, cy + r * 0.15)
-  ctx.lineTo(cx - r * 0.85, cy - r * 0.55)
-  ctx.closePath()
-  ctx.stroke()
-  ctx.beginPath()
-  ctx.moveTo(cx - r * 0.32, cy)
-  ctx.lineTo(cx - r * 0.05, cy + r * 0.3)
-  ctx.lineTo(cx + r * 0.4, cy - r * 0.25)
-  ctx.stroke()
-  ctx.restore()
-}
-
-function drawReliabilityArrow(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: number, color: string) {
-  ctx.save()
-  ctx.strokeStyle = color
-  ctx.lineWidth = 2.2
-  ctx.lineCap = 'round'
-  ctx.beginPath()
-  ctx.arc(cx, cy, r * 0.75, -Math.PI * 0.65, Math.PI * 0.95)
-  ctx.stroke()
-  const headAngle = Math.PI * 0.95
-  const hx = cx + r * 0.75 * Math.cos(headAngle)
-  const hy = cy + r * 0.75 * Math.sin(headAngle)
-  ctx.beginPath()
-  ctx.moveTo(hx, hy)
-  ctx.lineTo(hx - r * 0.28, hy - r * 0.05)
-  ctx.moveTo(hx, hy)
-  ctx.lineTo(hx - r * 0.1, hy + r * 0.28)
-  ctx.stroke()
-  ctx.restore()
-}
-
-function drawHeart(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: number, color: string) {
-  ctx.save()
-  ctx.fillStyle = color
-  ctx.beginPath()
-  const topY = cy - r * 0.35
-  ctx.moveTo(cx, cy + r * 0.7)
-  ctx.bezierCurveTo(cx - r * 1.1, cy - r * 0.15, cx - r * 0.5, topY - r * 0.7, cx, cy - r * 0.15)
-  ctx.bezierCurveTo(cx + r * 0.5, topY - r * 0.7, cx + r * 1.1, cy - r * 0.15, cx, cy + r * 0.7)
-  ctx.closePath()
-  ctx.fill()
-  ctx.restore()
-}
-
-function drawBadgeIcon(
-  ctx: CanvasRenderingContext2D,
-  kind: 'shield' | 'reliable' | 'heart' | 'star',
-  cx: number,
-  cy: number,
-  color: string
-) {
-  if (kind === 'shield') drawShieldCheck(ctx, cx, cy, 15, color)
-  else if (kind === 'reliable') drawReliabilityArrow(ctx, cx, cy, 15, color)
-  else if (kind === 'heart') drawHeart(ctx, cx, cy, 12, color)
-  else drawStar(ctx, cx, cy, 14)
-}
-
 // Draws the QR code with a small circular logo watermark centered on top.
 // Safe because both QR generators use errorCorrectionLevel 'H', which
 // tolerates roughly 30% obstruction - a small centered logo is well within
@@ -242,8 +167,7 @@ async function drawQRWithWatermark(
 /**
  * AI-powered "Scan to Review" poster: business branding at the top, a
  * feedback banner, Google + stars, the QR code (watermarked with the
- * business's own logo if they have one), a row of trust badges, and a
- * thank-you footer banner.
+ * business's own logo if they have one), and a thank-you footer banner.
  */
 export async function generateQRPoster({
   qrDataUrl,
@@ -254,7 +178,7 @@ export async function generateQRPoster({
   await ensureFonts()
 
   const width = 640
-  const height = 1200
+  const height = 1140
   const canvas = document.createElement('canvas')
   canvas.width = width
   canvas.height = height
@@ -289,13 +213,13 @@ export async function generateQRPoster({
       ctx.fillRect(width / 2 - logoSize / 2, y, logoSize, logoSize)
       ctx.drawImage(logo, width / 2 - logoSize / 2, y, logoSize, logoSize)
       ctx.restore()
-      y += logoSize + 24
+      y += logoSize + 46
     } catch {
       // Skip the logo slot entirely if it fails to load.
-      y += 12
+      y += 30
     }
   } else {
-    y += 12
+    y += 30
   }
 
   // Business name.
@@ -342,30 +266,6 @@ export async function generateQRPoster({
   ctx.restore()
   await drawQRWithWatermark(ctx, qrDataUrl, qrX, y, qrSize, logoUrl)
   y += qrSize + 56
-
-  // Trust badges row - consistent line-icon style, brand-tinted circles.
-  const badges: { kind: 'shield' | 'reliable' | 'heart' | 'star'; label: string }[] = [
-    { kind: 'shield', label: 'Trusted Quality' },
-    { kind: 'reliable', label: 'Reliable Service' },
-    { kind: 'heart', label: 'Customer First' },
-    { kind: 'star', label: 'Thank You!' },
-  ]
-  const badgeSpacing = width / badges.length
-  const badgeCircleR = 24
-  badges.forEach((b, i) => {
-    const cx = badgeSpacing * i + badgeSpacing / 2
-    ctx.beginPath()
-    ctx.arc(cx, y, badgeCircleR, 0, Math.PI * 2)
-    ctx.fillStyle = `${brand}15`
-    ctx.fill()
-    drawBadgeIcon(ctx, b.kind, cx, y, brand)
-    ctx.font = `600 12.5px "${HEADING_FONT}", Arial, sans-serif`
-    ctx.fillStyle = '#334155'
-    const words = b.label.split(' ')
-    ctx.fillText(words.slice(0, -1).join(' '), cx, y + badgeCircleR + 20)
-    ctx.fillText(words.slice(-1).join(' '), cx, y + badgeCircleR + 36)
-  })
-  y += badgeCircleR + 68
 
   // Small platform branding, sitting in the white space above the footer
   // banner - subtle on purpose, this poster is about the business, not us.
