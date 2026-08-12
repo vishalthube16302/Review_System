@@ -307,7 +307,7 @@ export async function generateDirectGooglePoster({
 
   const width = 640
   const topMargin = 100
-  const logoBlockH = logoUrl ? 20 : 0 // extra offset the logo adds before content starts
+  const logoBlockH = logoUrl ? 42 : 0 // extra offset the logo adds before content starts - text sits on its baseline, so this needs to clear the font's ascent, not just look like a gap in the numbers
   const nameH = 70
   const scanTextH = 66
   const googleH = 50
