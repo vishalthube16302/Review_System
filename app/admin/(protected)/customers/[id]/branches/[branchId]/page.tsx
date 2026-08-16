@@ -132,7 +132,7 @@ export default function EditBranchPage({
             Review URL (Permanent — cannot change)
           </label>
           <div className="flex items-center gap-2 bg-slate-100 rounded-lg px-4 py-3">
-            <span className="text-slate-400 text-sm">reviewboost.in/</span>
+            <span className="text-slate-400 text-sm">{(process.env.NEXT_PUBLIC_BASE_URL || '').replace(/^https?:\/\//, '')}/</span>
             <span className="font-mono text-indigo-700 font-medium text-sm">{branch.slug}</span>
             <span className="ml-auto text-xs text-slate-400">🔒 Linked to QR code</span>
           </div>
