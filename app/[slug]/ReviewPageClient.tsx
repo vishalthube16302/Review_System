@@ -60,7 +60,7 @@ export default function ReviewPageClient({
       // at a blank screen, then replace with AI drafts as soon as they're ready.
       setReviews(getRandomTemplates(templates, n, business))
 
-      const requestBody = JSON.stringify({ business_id: business.id, stars: n })
+      const requestBody = JSON.stringify({ business_id: business.id, stars: n, debug: debugMode })
 
       try {
         const res = await fetch('/api/generate-review', {
