@@ -92,7 +92,11 @@ Respond with ONLY a JSON array of ${count} strings, nothing else. Example format
 }
 
 export async function POST(req: NextRequest) {
-  const limited = await rateLimit(req, 'generate-review', 10, 300) // 10 per 5 min per IP
+  // 30 per 5 min per IP - generous enough for a busy shop where several
+  // customers on the same shared WiFi scan around the same time (they'd
+  // otherwise all share one IP and could trip a lower limit even under
+  // completely normal, non-abusive use).
+  const limited = await rateLimit(req, 'generate-review', 30, 300)
   if (limited) return limited
 
   let body: GenerateBody

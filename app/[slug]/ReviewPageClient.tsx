@@ -23,7 +23,15 @@ export default function ReviewPageClient({
   const [showCopyToast, setShowCopyToast] = useState(false)
   const [showFeedback, setShowFeedback] = useState(false)
   const [loadingReviews, setLoadingReviews] = useState(false)
-  const [reviewSource, setReviewSource] = useState<'ai' | 'template_fallback' | null>(null)
+  const [reviewSource, setReviewSource] = useState<'ai' | 'template_fallback' | 'error' | null>(
+    null
+  )
+  const [debugInfo, setDebugInfo] = useState<{
+    status: number
+    requestBody: string
+    responseBody: string
+    at: string
+  } | null>(null)
 
   // Hidden diagnostic tag - add ?debug=1 to the review URL to see whether
   // reviews came from the real AI call or the backup templates, without
@@ -45,28 +53,63 @@ export default function ReviewPageClient({
     if (n >= 4) {
       setReviews([])
       setReviewSource(null)
+      setDebugInfo(null)
       setLoadingReviews(true)
 
       // Show instant static suggestions immediately so the customer isn't staring
       // at a blank screen, then replace with AI drafts as soon as they're ready.
       setReviews(getRandomTemplates(templates, n, business))
 
+      const requestBody = JSON.stringify({ business_id: business.id, stars: n })
+
       try {
         const res = await fetch('/api/generate-review', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ business_id: business.id, stars: n }),
+          body: requestBody,
         })
-        const data = await res.json()
-        if (Array.isArray(data.reviews) && data.reviews.length > 0) {
-          setReviews(data.reviews)
+        const rawText = await res.text()
+        let data: { reviews?: string[]; source?: string; error?: string } = {}
+        try {
+          data = JSON.parse(rawText)
+        } catch {
+          // Response wasn't valid JSON - leave data empty, handled below.
         }
-        if (data.source === 'ai' || data.source === 'template_fallback') {
-          setReviewSource(data.source)
+
+        if (debugMode) {
+          setDebugInfo({
+            status: res.status,
+            requestBody,
+            responseBody: rawText,
+            at: new Date().toLocaleTimeString(),
+          })
         }
-      } catch {
+
+        if (!res.ok) {
+          // Rate-limited (429) or a server error - the instant static
+          // suggestions set above stay on screen, but we still record why
+          // so it's visible in debug mode instead of silently looking like
+          // a repeat of the same generic text with no explanation.
+          setReviewSource('error')
+        } else {
+          if (Array.isArray(data.reviews) && data.reviews.length > 0) {
+            setReviews(data.reviews)
+          }
+          if (data.source === 'ai' || data.source === 'template_fallback') {
+            setReviewSource(data.source as 'ai' | 'template_fallback')
+          }
+        }
+      } catch (err) {
         // Network error - the static suggestions set above stay on screen.
-        setReviewSource('template_fallback')
+        setReviewSource('error')
+        if (debugMode) {
+          setDebugInfo({
+            status: 0,
+            requestBody,
+            responseBody: err instanceof Error ? err.message : 'Network error',
+            at: new Date().toLocaleTimeString(),
+          })
+        }
       } finally {
         setLoadingReviews(false)
       }
@@ -193,18 +236,38 @@ export default function ReviewPageClient({
                 className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
                   reviewSource === 'ai'
                     ? 'bg-green-100 text-green-700'
-                    : 'bg-amber-100 text-amber-700'
+                    : reviewSource === 'error'
+                      ? 'bg-red-100 text-red-700'
+                      : 'bg-amber-100 text-amber-700'
                 }`}
                 title={
                   reviewSource === 'ai'
                     ? 'These came from the real AI call'
-                    : 'AI call failed or is not configured - showing backup templates'
+                    : reviewSource === 'error'
+                      ? 'The request failed (see debug panel below) - showing instant placeholder text'
+                      : 'AI call failed or is not configured - showing backup templates'
                 }
               >
-                {reviewSource === 'ai' ? 'AI ✓' : 'Backup ⚠'}
+                {reviewSource === 'ai' ? 'AI ✓' : reviewSource === 'error' ? 'Error ✕' : 'Backup ⚠'}
               </span>
             )}
           </div>
+
+          {debugMode && debugInfo && (
+            <div className="bg-slate-900 text-slate-200 text-[11px] font-mono rounded-lg p-3 space-y-2 overflow-x-auto">
+              <div>
+                <span className="text-slate-500">Sent at {debugInfo.at} - HTTP {debugInfo.status}</span>
+              </div>
+              <div>
+                <div className="text-indigo-300 mb-0.5">Request:</div>
+                <div className="whitespace-pre-wrap break-all">{debugInfo.requestBody}</div>
+              </div>
+              <div>
+                <div className="text-indigo-300 mb-0.5">Response:</div>
+                <div className="whitespace-pre-wrap break-all">{debugInfo.responseBody}</div>
+              </div>
+            </div>
+          )}
           {reviews.map((review, i) => (
             <button
               key={i}
