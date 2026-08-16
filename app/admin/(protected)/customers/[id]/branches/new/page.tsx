@@ -4,7 +4,7 @@ import { useState, use } from 'react'
 import { useRouter } from 'next/navigation'
 import { generateSlug } from '@/lib/slug'
 import { BUSINESS_CATEGORIES } from '@/lib/business-categories'
-import { BUSINESS_DESCRIPTION_MAX_LENGTH, looksLikeKeywordList } from '@/lib/constants'
+import { KEYWORDS_MAX_LENGTH } from '@/lib/constants'
 
 export default function AddBranchPage({
   params,
@@ -23,7 +23,7 @@ export default function AddBranchPage({
     area: '',
     cuisine_type: '',
     business_category: '',
-    business_description: '',
+    keywords: '',
     brand_color: '4F46E5',
   })
 
@@ -159,31 +159,25 @@ export default function AddBranchPage({
 
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1">
-            What do they do? (short description, helps AI write better reviews)
+            Keywords (helps AI write better reviews)
           </label>
           <textarea
-            value={form.business_description}
-            onChange={(e) => set('business_description', e.target.value)}
-            placeholder="e.g. sell and service industrial air compressors (follows the word 'They ...')"
-            maxLength={BUSINESS_DESCRIPTION_MAX_LENGTH}
+            value={form.keywords}
+            onChange={(e) => set('keywords', e.target.value)}
+            placeholder="e.g. air compressors, oil-free, industrial equipment, Pune supplier"
+            maxLength={KEYWORDS_MAX_LENGTH}
             rows={2}
             className="w-full border border-slate-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
           />
           <div className="flex items-center justify-between mt-1">
             <p className="text-xs text-slate-400">
-              Write it as one plain sentence, like you are telling a friend - not a list of
-              keywords. It gets used as: <span className="italic">&quot;They {form.business_description || '...'}&quot;</span>
+              Comma-separated. The AI weaves 1-3 of these naturally into each review - never
+              copies them as a list.
             </p>
             <span className="text-xs text-slate-300 shrink-0 ml-2">
-              {form.business_description.length}/{BUSINESS_DESCRIPTION_MAX_LENGTH}
+              {form.keywords.length}/{KEYWORDS_MAX_LENGTH}
             </span>
           </div>
-          {looksLikeKeywordList(form.business_description) && (
-            <p className="text-xs text-amber-600 mt-1">
-              This looks like a list of keywords rather than a sentence - AI reviews read better
-              from a plain sentence, like the example above.
-            </p>
-          )}
         </div>
 
         <div>

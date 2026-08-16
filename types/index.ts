@@ -24,7 +24,7 @@ export interface BusinessPage {
   area?: string
   cuisine_type: string
   business_category?: string
-  business_description?: string
+  keywords?: string
   logo_url?: string
   brand_color: string
   plan: string
