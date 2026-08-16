@@ -4,6 +4,7 @@ import { useState, useEffect, use } from 'react'
 import { useRouter } from 'next/navigation'
 import type { BusinessPage } from '@/types'
 import { BUSINESS_CATEGORIES } from '@/lib/business-categories'
+import { BUSINESS_DESCRIPTION_MAX_LENGTH, looksLikeKeywordList } from '@/lib/constants'
 
 export default function EditBranchPage({
   params,
@@ -185,13 +186,13 @@ export default function EditBranchPage({
           <label className="block text-sm font-medium text-slate-700 mb-1">
             What do they do? (short description)
           </label>
-          <input
-            type="text"
+          <textarea
             value={form.business_description || ''}
             onChange={(e) => set('business_description', e.target.value)}
             placeholder="e.g. repair laptops, sell new computers, and refill printer cartridges"
-            maxLength={200}
-            className="w-full border border-slate-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            maxLength={BUSINESS_DESCRIPTION_MAX_LENGTH}
+            rows={2}
+            className="w-full border border-slate-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
           />
           <div className="flex items-center justify-between mt-1">
             <p className="text-xs text-slate-400">
@@ -201,9 +202,15 @@ export default function EditBranchPage({
               </span>
             </p>
             <span className="text-xs text-slate-300 shrink-0 ml-2">
-              {(form.business_description || '').length}/200
+              {(form.business_description || '').length}/{BUSINESS_DESCRIPTION_MAX_LENGTH}
             </span>
           </div>
+          {looksLikeKeywordList(form.business_description || '') && (
+            <p className="text-xs text-amber-600 mt-1">
+              This looks like a list of keywords rather than a sentence - AI reviews read better
+              from a plain sentence, like the example above.
+            </p>
+          )}
         </div>
 
         <div className="grid grid-cols-2 gap-4">
