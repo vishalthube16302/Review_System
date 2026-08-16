@@ -65,7 +65,7 @@ export default function AddBranchPage({
         <div className="bg-indigo-50 rounded-lg p-3 mb-6 text-sm">
           <span className="text-slate-500">Review URL: </span>
           <span className="text-indigo-700 font-mono font-medium">
-            reviewboost.in/{generateSlug(form.business_name)}
+            {(process.env.NEXT_PUBLIC_BASE_URL || '').replace(/^https?:\/\//, '')}/{generateSlug(form.business_name)}
           </span>
         </div>
       )}

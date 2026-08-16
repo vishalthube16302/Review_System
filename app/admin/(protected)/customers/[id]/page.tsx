@@ -471,7 +471,7 @@ export default function CustomerDetailPage({
               <div>
                 <p className="font-medium text-slate-900">{b.business_name}</p>
                 <p className="text-sm text-slate-500">
-                  {b.location} · reviewboost.in/{b.slug}
+                  {b.location} · {(process.env.NEXT_PUBLIC_BASE_URL || '').replace(/^https?:\/\//, '')}/{b.slug}
                 </p>
               </div>
               <div className="flex items-center gap-4">
