@@ -53,7 +53,7 @@ export async function PATCH(
         area: body.area,
         cuisine_type: body.cuisine_type,
         business_category: body.business_category,
-        business_description: body.business_description,
+        keywords: body.keywords,
         google_place_id: body.google_place_id,
         brand_color: body.brand_color,
         logo_url: body.logo_url,

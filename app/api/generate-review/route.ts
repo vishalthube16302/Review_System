@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase-server'
 import { getRandomTemplates } from '@/lib/templates'
 import { rateLimit } from '@/lib/rate-limit'
-import { buildReviewPrompt } from '@/lib/review-prompt'
-import type { BusinessPage } from '@/types'
+import { buildSystemPrompt, buildUserPrompt } from '@/lib/review-prompt'
 
 // Free-tier AI provider. Swap provider by changing only this constant + callGroq().
 const GROQ_MODEL = 'llama-3.3-70b-versatile'
@@ -12,19 +11,15 @@ const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions'
 interface GenerateBody {
   business_id: string
   stars: number
-  feedback_text?: string
+  // Client sends this only when the page was loaded with ?debug=1 - lets the
+  // response include the exact system/user prompt text sent to Groq, so the
+  // hidden debug panel can show it. Never shown to a normal customer.
+  debug?: boolean
 }
 
-async function callGroq(
-  business: BusinessPage,
-  stars: number,
-  feedbackText: string | undefined,
-  count: number
-): Promise<string[]> {
+async function callGroq(systemPrompt: string, userPrompt: string, count: number): Promise<string[]> {
   const apiKey = process.env.GROQ_API_KEY
   if (!apiKey) throw new Error('GROQ_API_KEY not configured')
-
-  const prompt = buildReviewPrompt(business, stars, feedbackText, count)
 
   const res = await fetch(GROQ_URL, {
     method: 'POST',
@@ -34,7 +29,10 @@ async function callGroq(
     },
     body: JSON.stringify({
       model: GROQ_MODEL,
-      messages: [{ role: 'user', content: prompt }],
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt },
+      ],
       temperature: 0.9,
       max_tokens: 500,
     }),
@@ -74,7 +72,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
   }
 
-  const { business_id, stars, feedback_text } = body
+  const { business_id, stars, debug } = body
   if (!business_id || !stars || stars < 1 || stars > 5) {
     return NextResponse.json({ error: 'business_id and a valid stars (1-5) are required' }, { status: 400 })
   }
@@ -91,11 +89,19 @@ export async function POST(req: NextRequest) {
   }
 
   const COUNT = 4
+  // Fresh seed per request - included in the user prompt so two back-to-back
+  // requests for the same business+rating don't look like an identical input
+  // to the model, which helps drafts vary run to run.
+  const seed = Date.now()
+  // Built once regardless of AI success/failure, so debug mode can show
+  // exactly what would have been (or was) sent to Groq even on a fallback.
+  const systemPrompt = buildSystemPrompt(COUNT)
+  const userPrompt = buildUserPrompt(business, stars, seed)
 
   try {
-    const reviews = await callGroq(business, stars, feedback_text, COUNT)
+    const reviews = await callGroq(systemPrompt, userPrompt, COUNT)
     if (reviews.length === 0) throw new Error('Groq returned no reviews')
-    return NextResponse.json({ reviews, source: 'ai' })
+    return NextResponse.json({ reviews, source: 'ai', ...(debug ? { systemPrompt, userPrompt } : {}) })
   } catch (err) {
     // Never block the customer flow on an AI hiccup - fall back to static templates.
     // Logged server-side so degraded AI availability is visible in deployment logs/alerts,
@@ -109,6 +115,10 @@ export async function POST(req: NextRequest) {
       .eq('is_active', true)
 
     const fallbackReviews = getRandomTemplates(templates ?? [], stars, business, COUNT)
-    return NextResponse.json({ reviews: fallbackReviews, source: 'template_fallback' })
+    return NextResponse.json({
+      reviews: fallbackReviews,
+      source: 'template_fallback',
+      ...(debug ? { systemPrompt, userPrompt, fallbackReason: err instanceof Error ? err.message : String(err) } : {}),
+    })
   }
 }

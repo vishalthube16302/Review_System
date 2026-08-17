@@ -13,34 +13,31 @@ function areaOrCity(business: BusinessPage): string {
   return business.area || business.city
 }
 
-// "sell and service computers, laptops, repair, maintenance, and accessories."
-// -> "sell and service computers and laptops" - just the first clause, so
-// generated lines stay short and readable instead of running the entire
-// description into one long sentence.
+// Builds a short "they {clause}" fragment from the comma-separated keywords
+// field for the offline fallback templates (no model available to weave
+// keywords naturally here, so keep it simple and safe).
 //
-// Also guards against descriptions typed as a list of keywords/tags (e.g.
-// "Air Compressor Seller,Oil-Free Compressor,Pune-Based Supplier...")
-// instead of a sentence following "They ..." - using that verbatim would
-// read as broken grammar ("They Air Compressor Seller"), so if the first
-// clause doesn't look like a normal verb phrase, we skip it here and fall
-// back to the simpler generic lines instead. The AI prompt has its own
-// instruction to rewrite keyword-style descriptions into natural language,
-// but this static path has no model to do that rewriting, so playing it
-// safe is better than shipping a grammatically broken review.
-const COMMON_VERBS = /^(sell|sells|provide|provides|offer|offers|repair|repairs|service|services|make|makes|manufacture|manufactures|supply|supplies|build|builds|install|installs|fix|fixes|run|runs|do|does|specialize|specializes|design|designs|deliver|delivers|handle|handles|do)\b/i
-
+// e.g. keywords "air compressors, oil-free compressors, material handling
+// equipment" -> "handle air compressors and oil-free compressors"
 function whatTheyDo(business: BusinessPage): string | null {
-  if (!business.business_description) return null
-  const firstClause = business.business_description
-    .trim()
-    .replace(/\.$/, '')
-    .split(/,| and (?=\w+ing\b)/i)[0]
-    .trim()
+  if (!business.keywords) return null
+  const keywords = business.keywords
+    .split(',')
+    .map((k) => k.trim())
+    .filter(Boolean)
 
-  if (!COMMON_VERBS.test(firstClause)) return null
+  if (keywords.length === 0) return null
 
-  const words = firstClause.split(/\s+/)
-  return words.length > 8 ? words.slice(0, 8).join(' ') : firstClause
+  // If the first keyword already contains "and" (e.g. "repair and
+  // maintenance"), it reads as its own clause - joining a second keyword
+  // onto it would double up into "repair and maintenance and computer
+  // sales", so use it alone instead.
+  if (/\band\b/i.test(keywords[0])) {
+    return `handle ${keywords[0]}`
+  }
+
+  const picked = keywords.slice(0, 2)
+  return `handle ${picked.join(' and ')}`
 }
 
 /**
