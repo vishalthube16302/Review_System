@@ -28,6 +28,14 @@ function whatTheyDo(business: BusinessPage): string | null {
 
   if (keywords.length === 0) return null
 
+  // If the first keyword already contains "and" (e.g. "repair and
+  // maintenance"), it reads as its own clause - joining a second keyword
+  // onto it would double up into "repair and maintenance and computer
+  // sales", so use it alone instead.
+  if (/\band\b/i.test(keywords[0])) {
+    return `handle ${keywords[0]}`
+  }
+
   const picked = keywords.slice(0, 2)
   return `handle ${picked.join(' and ')}`
 }
