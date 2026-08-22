@@ -36,6 +36,28 @@ export interface BusinessPage {
   renewal_count: number
 }
 
+// Only the fields the public, unauthenticated review page
+// (app/[slug]/page.tsx -> ReviewPageClient) actually needs to render, call
+// /api/generate-review, and build the instant client-side fallback text via
+// lib/templates.ts. Deliberately narrower than BusinessPage - the full row
+// includes internal/sensitive fields (customer_id, plan, expires_at,
+// business_category, prompt_template) that must never be sent to an
+// anonymous visitor scanning a QR code. area/city/keywords/cuisine_type ARE
+// included here since they're meant to appear in the customer-facing
+// reviews anyway - no sensitivity issue there.
+export type PublicBusinessInfo = Pick<
+  BusinessPage,
+  | 'id'
+  | 'business_name'
+  | 'location'
+  | 'logo_url'
+  | 'google_place_id'
+  | 'area'
+  | 'city'
+  | 'cuisine_type'
+  | 'keywords'
+>
+
 export interface ReviewTemplate {
   id: string
   stars: number

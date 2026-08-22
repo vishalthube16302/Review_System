@@ -40,12 +40,18 @@ interface PromptVars {
  * per-request values. Unknown/extra placeholders are left as-is rather than
  * throwing, since a customer's edited template shouldn't be able to crash
  * review generation over a typo'd variable name.
+ *
+ * Uses function replacers (not string replacers) deliberately - a string
+ * replacement is subject to special $-patterns ($&, $1, $`, $', $$), so a
+ * business name or keyword containing a literal "$" followed by one of
+ * those characters would otherwise corrupt the substitution. Function
+ * replacers insert their return value literally, with no such risk.
  */
 export function fillPromptTemplate(template: string, vars: PromptVars): string {
   return template
-    .replace(/\{\{business_name\}\}/g, vars.business_name)
-    .replace(/\{\{keywords\}\}/g, vars.keywords || 'none provided')
-    .replace(/\{\{area\}\}/g, vars.area)
-    .replace(/\{\{rating\}\}/g, String(vars.rating))
-    .replace(/\{\{seed\}\}/g, String(vars.seed))
+    .replace(/\{\{business_name\}\}/g, () => vars.business_name)
+    .replace(/\{\{keywords\}\}/g, () => vars.keywords || 'none provided')
+    .replace(/\{\{area\}\}/g, () => vars.area)
+    .replace(/\{\{rating\}\}/g, () => String(vars.rating))
+    .replace(/\{\{seed\}\}/g, () => String(vars.seed))
 }
