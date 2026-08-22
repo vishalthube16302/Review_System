@@ -33,7 +33,7 @@ export default function RestaurantPromptPage({
       })
       .then((b: BusinessPage) => {
         setBusiness(b)
-        setPromptTemplate(b.prompt_template || DEFAULT_PROMPT_TEMPLATE)
+        setPromptTemplate(b.prompt_template || '')
         setLoading(false)
       })
       .catch((err) => {
@@ -101,13 +101,15 @@ export default function RestaurantPromptPage({
         <textarea
           value={promptTemplate}
           onChange={(e) => setPromptTemplate(e.target.value)}
+          placeholder="Leave blank to use the default AI prompt"
           maxLength={PROMPT_TEMPLATE_MAX_LENGTH}
           rows={14}
           className="w-full border border-slate-200 rounded-lg px-4 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-y"
         />
         <div className="flex items-center justify-between mt-1">
           <p className="text-xs text-slate-400">
-            Available variables: {'{{business_name}}'}, {'{{keywords}}'}, {'{{area}}'},{' '}
+            Leave blank to use the default AI prompt. Available variables:{' '}
+            {'{{business_name}}'}, {'{{keywords}}'}, {'{{area}}'},{' '}
             {'{{rating}}'}, {'{{seed}}'}. Changes apply to every review generated from now on.
           </p>
           <span className="text-xs text-slate-300 shrink-0 ml-2">

@@ -222,15 +222,16 @@ export default function EditBranchPage({
           <textarea
             value={form.prompt_template || ''}
             onChange={(e) => set('prompt_template', e.target.value)}
+            placeholder="Leave blank to use the default AI prompt"
             maxLength={PROMPT_TEMPLATE_MAX_LENGTH}
             rows={10}
             className="w-full border border-slate-200 rounded-lg px-4 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-y"
           />
           <div className="flex items-center justify-between mt-1">
             <p className="text-xs text-slate-400">
-              The full prompt sent to the AI. Available variables: {'{{business_name}}'},{' '}
-              {'{{keywords}}'}, {'{{area}}'}, {'{{rating}}'}, {'{{seed}}'}. The restaurant owner
-              can also edit this from their own dashboard.
+              Leave blank to use the default AI prompt. Available variables:{' '}
+              {'{{business_name}}'}, {'{{keywords}}'}, {'{{area}}'}, {'{{rating}}'}, {'{{seed}}'}.
+              The restaurant owner can also edit this from their own dashboard.
             </p>
             <span className="text-xs text-slate-300 shrink-0 ml-2">
               {(form.prompt_template || '').length}/{PROMPT_TEMPLATE_MAX_LENGTH}
