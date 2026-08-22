@@ -64,6 +64,7 @@ export async function POST(request: Request) {
         cuisine_type: body.cuisine_type,
         business_category: body.business_category,
         keywords: body.keywords,
+        prompt_template: body.prompt_template,
         brand_color: body.brand_color,
         logo_url: body.logo_url || null,
         plan: body.plan,

@@ -72,6 +72,7 @@ export async function POST(
         cuisine_type: body.cuisine_type,
         business_category: body.business_category,
         keywords: body.keywords,
+        prompt_template: body.prompt_template,
         brand_color: body.brand_color || '4F46E5',
         plan,
         expires_at,

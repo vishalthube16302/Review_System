@@ -25,6 +25,7 @@ export interface BusinessPage {
   cuisine_type: string
   business_category?: string
   keywords?: string
+  prompt_template?: string
   logo_url?: string
   brand_color: string
   plan: string
