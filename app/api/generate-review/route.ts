@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase-server'
 import { getRandomTemplates } from '@/lib/templates'
 import { rateLimit } from '@/lib/rate-limit'
-import { buildSystemPrompt, buildUserPrompt } from '@/lib/review-prompt'
+import { DEFAULT_PROMPT_TEMPLATE, fillPromptTemplate } from '@/lib/review-prompt'
 
 // Free-tier AI provider. Swap provider by changing only this constant + callGroq().
 const GROQ_MODEL = 'llama-3.3-70b-versatile'
@@ -12,12 +12,12 @@ interface GenerateBody {
   business_id: string
   stars: number
   // Client sends this only when the page was loaded with ?debug=1 - lets the
-  // response include the exact system/user prompt text sent to Groq, so the
-  // hidden debug panel can show it. Never shown to a normal customer.
+  // response include the exact prompt text sent to Groq, so the hidden
+  // debug panel can show it. Never shown to a normal customer.
   debug?: boolean
 }
 
-async function callGroq(systemPrompt: string, userPrompt: string, count: number): Promise<string[]> {
+async function callGroq(prompt: string, count: number): Promise<string[]> {
   const apiKey = process.env.GROQ_API_KEY
   if (!apiKey) throw new Error('GROQ_API_KEY not configured')
 
@@ -29,10 +29,10 @@ async function callGroq(systemPrompt: string, userPrompt: string, count: number)
     },
     body: JSON.stringify({
       model: GROQ_MODEL,
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt },
-      ],
+      // Whole thing is one message - the stored prompt_template already
+      // contains both the instructions and the filled-in business data, so
+      // there's no separate fixed system message to layer on top of it.
+      messages: [{ role: 'user', content: prompt }],
       temperature: 0.9,
       max_tokens: 500,
     }),
@@ -89,19 +89,27 @@ export async function POST(req: NextRequest) {
   }
 
   const COUNT = 4
-  // Fresh seed per request - included in the user prompt so two back-to-back
-  // requests for the same business+rating don't look like an identical input
-  // to the model, which helps drafts vary run to run.
+  // Fresh seed per request - included in the template so two back-to-back
+  // requests for the same business+rating don't look like an identical
+  // input to the model, which helps drafts vary run to run.
   const seed = Date.now()
-  // Built once regardless of AI success/failure, so debug mode can show
-  // exactly what would have been (or was) sent to Groq even on a fallback.
-  const systemPrompt = buildSystemPrompt(COUNT)
-  const userPrompt = buildUserPrompt(business, stars, seed)
+  // DB column has a DEFAULT of the same starter text, so this should
+  // basically never be empty in practice - but a business could have its
+  // template cleared manually, so still fall back defensively rather than
+  // sending an empty prompt to Groq.
+  const template = business.prompt_template || DEFAULT_PROMPT_TEMPLATE
+  const prompt = fillPromptTemplate(template, {
+    business_name: business.business_name,
+    keywords: business.keywords || '',
+    area: business.area || business.city,
+    rating: stars,
+    seed,
+  })
 
   try {
-    const reviews = await callGroq(systemPrompt, userPrompt, COUNT)
+    const reviews = await callGroq(prompt, COUNT)
     if (reviews.length === 0) throw new Error('Groq returned no reviews')
-    return NextResponse.json({ reviews, source: 'ai', ...(debug ? { systemPrompt, userPrompt } : {}) })
+    return NextResponse.json({ reviews, source: 'ai', ...(debug ? { prompt } : {}) })
   } catch (err) {
     // Never block the customer flow on an AI hiccup - fall back to static templates.
     // Logged server-side so degraded AI availability is visible in deployment logs/alerts,
@@ -118,7 +126,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       reviews: fallbackReviews,
       source: 'template_fallback',
-      ...(debug ? { systemPrompt, userPrompt, fallbackReason: err instanceof Error ? err.message : String(err) } : {}),
+      ...(debug ? { prompt, fallbackReason: err instanceof Error ? err.message : String(err) } : {}),
     })
   }
 }

@@ -157,6 +157,12 @@ export default async function RestaurantDashboardPage() {
                 </div>
                 <StatusBadge isActive={b.is_active} expiresAt={b.expires_at} />
                 <Link
+                  href={`/dashboard/branches/${b.id}/prompt`}
+                  className="text-indigo-600 hover:text-indigo-700 font-medium"
+                >
+                  AI Prompt
+                </Link>
+                <Link
                   href={`/dashboard/branches/${b.id}/qr`}
                   className="text-indigo-600 hover:text-indigo-700 font-medium"
                 >

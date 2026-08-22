@@ -3,13 +3,13 @@
 import { useState } from 'react'
 import { StarRating } from '@/components/StarRating'
 import { getRandomTemplates } from '@/lib/templates'
-import type { BusinessPage, ReviewTemplate } from '@/types'
+import type { PublicBusinessInfo, ReviewTemplate } from '@/types'
 
 export default function ReviewPageClient({
   business,
   templates,
 }: {
-  business: BusinessPage
+  business: PublicBusinessInfo
   templates: ReviewTemplate[]
 }) {
   const [stars, setStars] = useState(0)

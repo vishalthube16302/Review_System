@@ -1,6 +1,6 @@
-import type { BusinessPage, ReviewTemplate } from '@/types'
+import type { PublicBusinessInfo, ReviewTemplate } from '@/types'
 
-export function fillTemplate(template: string, business: BusinessPage): string {
+export function fillTemplate(template: string, business: PublicBusinessInfo): string {
   return template
     .replace(/{name}/g, business.business_name)
     .replace(/{city}/g, business.city)
@@ -9,7 +9,7 @@ export function fillTemplate(template: string, business: BusinessPage): string {
     .replace(/{cuisine}/g, business.cuisine_type)
 }
 
-function areaOrCity(business: BusinessPage): string {
+function areaOrCity(business: PublicBusinessInfo): string {
   return business.area || business.city
 }
 
@@ -19,7 +19,7 @@ function areaOrCity(business: BusinessPage): string {
 //
 // e.g. keywords "air compressors, oil-free compressors, material handling
 // equipment" -> "handle air compressors and oil-free compressors"
-function whatTheyDo(business: BusinessPage): string | null {
+function whatTheyDo(business: PublicBusinessInfo): string | null {
   if (!business.keywords) return null
   const keywords = business.keywords
     .split(',')
@@ -57,7 +57,7 @@ function whatTheyDo(business: BusinessPage): string | null {
 export function getRandomTemplates(
   templates: ReviewTemplate[],
   stars: number,
-  business: BusinessPage,
+  business: PublicBusinessInfo,
   count = 4
 ): string[] {
   const name = business.business_name
