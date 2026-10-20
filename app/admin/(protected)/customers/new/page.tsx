@@ -378,7 +378,7 @@ export default function AddCustomerPage() {
           <div className="flex items-center justify-between mt-1">
             <p className="text-xs text-slate-400">
               Leave blank to use the default AI prompt. Available variables:{' '}
-              {'{{business_name}}'}, {'{{keywords}}'}, {'{{area}}'}, {'{{rating}}'}, {'{{seed}}'}.
+              {'{{business_name}}'}, {'{{keywords}}'}, {'{{area}}'}, {'{{rating}}'}, {'{{seed}}'}, {'{{highlights}}'}, {'{{improvements}}'}, {'{{customer_note}}'}.
               The restaurant owner can also edit this from their own dashboard.
             </p>
             <span className="text-xs text-slate-300 shrink-0 ml-2">

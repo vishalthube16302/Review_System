@@ -56,6 +56,7 @@ export type PublicBusinessInfo = Pick<
   | 'city'
   | 'cuisine_type'
   | 'keywords'
+  | 'business_category'
 >
 
 export interface ReviewTemplate {

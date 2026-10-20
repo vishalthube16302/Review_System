@@ -8,10 +8,10 @@ A complete SaaS platform for restaurants, hotels, and bars to collect Google rev
 - ✅ Permanent slug architecture (QR never needs reprinting)
 - ✅ Multi-client support from single codebase
 - ✅ Dynamic branding (logo + brand color per client)
-- ✅ Private feedback capture for 1-3 star reviews
+- ✅ Optional private message to the owner (any rating - every customer can still post on Google)
 - ✅ Admin dashboard with analytics
 - ✅ Mobile-optimized review page
-- ✅ AI-personalized review suggestions (Groq/Llama, free tier) with static-template fallback
+- ✅ AI review drafts grounded in what the customer tapped/wrote (Groq gpt-oss, free tier) with offline fallback
 
 ## Tech Stack
 
@@ -49,6 +49,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
 SUPABASE_SERVICE_KEY=your_service_key
 NEXT_PUBLIC_BASE_URL=http://localhost:3000 (dev) or https://reviewboost.in (prod)
 GROQ_API_KEY=your_groq_api_key (free tier at console.groq.com - powers AI review generation)
+GROQ_MODEL / GROQ_FALLBACK_MODEL (optional - override when Groq retires a model)
 ```
 
 ## Admin Panel

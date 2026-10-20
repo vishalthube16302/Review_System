@@ -34,18 +34,18 @@ export default function LandingPage() {
           <div className="hero-inner">
             <p className="eyebrow">Google reviews, made effortless</p>
             <h1>
-              Turn every happy customer
+              Turn every customer visit
               <br />
-              into a <span className="hl">5-star Google review</span>
+              into a <span className="hl">real Google review</span>
             </h1>
             <p className="hero-punch">
               No typing. <span className="dot">&bull;</span> No guessing what to write.{' '}
-              <span className="dot">&bull;</span> No bad reviews going public.
+              <span className="dot">&bull;</span> Every word is theirs to edit.
             </p>
             <p className="hero-sub">
-              One QR code. One tap. A short, honest, AI-written review your customers actually
-              want to post &mdash; and a private channel to catch unhappy ones before they ever
-              reach Google.
+              One QR code. One tap. Customers tap what they liked, AI turns it into a review in
+              their own voice, and they post it from their own Google account &mdash; plus a direct
+              line to you when something went wrong.
             </p>
             <div className="promo-strip">
               <span className="promo-dot" />
@@ -123,10 +123,10 @@ export default function LandingPage() {
         {/* ---------- How it works ---------- */}
         <section id="how-it-works" className="steps">
           <p className="eyebrow center">How it works</p>
-          <h2 className="section-title center">From scan to five stars</h2>
+          <h2 className="section-title center">From scan to posted review</h2>
           <p className="section-sub center">
-            Four steps, under thirty seconds &mdash; and a private safety net for anyone who
-            isn&apos;t fully happy.
+            Four steps, under a minute &mdash; and a direct line to the owner for anyone who
+            wants one.
           </p>
 
           <div className="steps-grid">
@@ -190,7 +190,7 @@ export default function LandingPage() {
                       <span className="check">✓</span>
                     </div>
                     <p>
-                      <strong>4&ndash;5 stars</strong> &mdash; posted to Google in their own words
+                      <strong>Every rating</strong> &mdash; can post to Google in their own words
                     </p>
                   </div>
                   <div className="branch-path branch-quiet">
@@ -198,8 +198,8 @@ export default function LandingPage() {
                       ✉
                     </div>
                     <p>
-                      <strong>1&ndash;3 stars</strong> &mdash; sent privately to your dashboard
-                      instead
+                      <strong>Something wrong?</strong> &mdash; they can also message you
+                      privately
                     </p>
                   </div>
                 </div>
@@ -241,10 +241,10 @@ export default function LandingPage() {
               </p>
             </div>
             <div className="feature">
-              <h3>Private feedback, not public damage</h3>
+              <h3>Hear problems first-hand</h3>
               <p>
-                Unhappy customers get a direct line to you, not a permanent 1-star post on your
-                profile.
+                Any customer can message you privately, so you can fix issues and win them
+                back.
               </p>
             </div>
             <div className="feature">

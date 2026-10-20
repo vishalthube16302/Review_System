@@ -110,7 +110,7 @@ export default function RestaurantPromptPage({
           <p className="text-xs text-slate-400">
             Leave blank to use the default AI prompt. Available variables:{' '}
             {'{{business_name}}'}, {'{{keywords}}'}, {'{{area}}'},{' '}
-            {'{{rating}}'}, {'{{seed}}'}. Changes apply to every review generated from now on.
+            {'{{rating}}'}, {'{{seed}}'}, {'{{highlights}}'}, {'{{improvements}}'}, {'{{customer_note}}'}. Changes apply to every review generated from now on.
           </p>
           <span className="text-xs text-slate-300 shrink-0 ml-2">
             {promptTemplate.length}/{PROMPT_TEMPLATE_MAX_LENGTH}
