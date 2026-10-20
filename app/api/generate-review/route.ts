@@ -61,9 +61,9 @@ async function callGroq(model: string, messages: Message[], timeoutMs: number): 
 }
 
 export async function POST(req: NextRequest) {
-  // 30 per 5 min per IP - shops often share one WiFi IP, and "try different
-  // wording" makes repeat calls normal.
-  const limited = await rateLimit(req, 'generate-review', 30, 300)
+  // 60 per 5 min per IP - shops often share one WiFi IP, and the review
+  // rewrites itself as keywords are tapped (debounced), so repeat calls are normal.
+  const limited = await rateLimit(req, 'generate-review', 60, 300)
   if (limited) return limited
 
   let body: Record<string, unknown>
